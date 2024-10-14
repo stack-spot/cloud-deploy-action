@@ -1,0 +1,24 @@
+name: Cloud Deploy Action Test STG
+
+on:
+  push:
+    branches:
+        - feat/1/action-stg
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Deploy repo application
+        uses: stack-spot/cloud-deploy-action@feat/1/action-stg
+        id: deploy
+        with:
+          CLIENT_REALM: ${{ secrets.CLIENT_REALM }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_KEY: ${{ secrets.CLIENT_KEY }}
+          APPLICATION_FILE: ${{ github.workspace }}/.stk/application.yaml
+          VERBOSE: true
+ 

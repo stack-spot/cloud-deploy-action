@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import time
 from ruamel.yaml import YAML
 from io import StringIO
 
@@ -19,11 +20,68 @@ def safe_load(content: str) -> dict:
     return yml.load(StringIO(content))
 
 
-def save_output(name: str, value: str):
-    with open(os.environ['GITHUB_OUTPUT'], 'a') as output_file:
-        print(f'{name}={value}', file=output_file)
+def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
+     # Gather authentication data
+    iam_url_stg = [ f"https://iam-auth-ssr.stg.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"]
+    iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    iam_data = {"client_id": f"{CLIENT_ID}", "grant_type": "client_credentials", "client_secret": f"{CLIENT_KEY}"}
+
+    print("Authenticating...")
+    r1 = requests.post(
+            url=iam_url_stg, 
+            headers=iam_headers, 
+            data=iam_data
+        )
+
+    if r1.status_code == 200:
+        d1 = r1.json()
+        access_token = d1["access_token"]
+        print("Successfully authenticated!")
+        return access_token  # Return the access token
+    else:
+        print("- Error during IAM authentication")
+        print("- Status:", r1.status_code)
+        print("- Error:", r1.reason)
+        print("- Response:", r1.text)
+        exit(1)
 
 
+def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers):
+    stackspot_cloud_deployments_details_url_stg = f"https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments/details/{deployment_id}"
+    application_portal_url_stg = "https://cloud.stg.stackspot.com/applications"
+    
+    while True:
+        print(f"Checking application {application_name} deployment status in runtime: {runtime_name}.")
+        
+        # Make the request to check the deployment status
+        r3 = requests.get(
+            url=stackspot_cloud_deployments_details_url_stg, 
+            headers=deploy_headers
+        )
+        
+        if r3.status_code == 200:
+            d3 = r3.json()
+            deployment_status = d3.get("deploymentStatus")
+            
+            # Check if the deployment status is "UP"
+            if deployment_status == "UP":
+                print(f"Deployment concluded for application {application_name} in runtime: {runtime_name}.")
+                print(f"Check the application status on {application_portal_url_stg}/{application_id}")
+                break  # Exit the loop once the status is "UP"
+            else:
+                print(f"Current deployment status: {deployment_status}. Retrying in 5 seconds...")   
+        else:
+            print("- Error getting deployment details")
+            print("- Status:", r3.status_code)
+            print("- Error:", r3.reason)
+            print("- Response:", r3.text)    
+            exit(1)
+        
+        # Wait for 5 seconds before the next polling attempt
+        time.sleep(5)
+
+
+# To use later to extract github url for logs
 def build_pipeline_url() -> str:
     GITHUB_SERVER_URL = os.getenv("GITHUB_SERVER_URL")
     GITHUB_REPOSITORY = os.getenv("GITHUB_REPOSITORY")
@@ -33,6 +91,7 @@ def build_pipeline_url() -> str:
         exit(1)
     url = f"{GITHUB_SERVER_URL}/{GITHUB_REPOSITORY}/actions/runs/{GITHUB_RUN_ID}"
     return url
+
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
@@ -102,74 +161,52 @@ if replica_min is None:
 if VERBOSE is not None:
     print("- APPLICATION FILE:", yaml_data)
 
-# Gather authentication data
-iam_url_stg = [ f"https://iam-auth-ssr.stg.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"]
-iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-iam_data = {"client_id": f"{CLIENT_ID}", "grant_type": "client_credentials", "client_secret": f"{CLIENT_KEY}"}
+# Create the DEPLOYMENT JSON structure
+data = {
+    "applicationId": application_id,
+    "action": "DEPLOY",
+    "containerPort": container_port,
+    "healthCheckPath": health_check_path,
+    "envVars": env_vars,
+    "imageUrl": image_url,
+    "tag": tag,
+    "runtimeId": runtime_id,
+    "mem": mem,
+    "cpu": cpu,
+    "replicaNum": {
+        "min": replica_min,
+        "max": replica_max,
+        "cpu": replica_cpu
+    }
+}
 
-print("Authenticating...")
-r1 = requests.post(
-        url=iam_url_stg, 
-        headers=iam_headers, 
-        data=iam_data
+# Convert the dictionary to a JSON string
+json_data = json.dumps(data, indent=4)
+
+if VERBOSE is not None:
+    print("- DEPLOYMENT REQUEST DATA:", json_data)
+
+access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
+deploy_headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+
+print(f"Deploying application {application_name} in runtime: {runtime_name}.")
+stackspot_cloud_deployments_url_stg = "https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments"
+r2 = requests.post(
+        url=stackspot_cloud_deployments_url_stg, 
+        headers=deploy_headers,
+        data=json_data
     )
 
-if r1.status_code == 200:
-    d1 = r1.json()
-    access_token = d1["access_token"]
-    print("Successfully authenticated!")
-
-    # Create the DEPLOYMENT JSON structure
-    data = {
-        "applicationId": application_id,
-        "action": "DEPLOY",
-        "containerPort": container_port,
-        "healthCheckPath": health_check_path,
-        "envVars": env_vars,
-        "imageUrl": image_url,
-        "tag": tag,
-        "runtimeId": runtime_id,
-        "mem": mem,
-        "cpu": cpu,
-        "replicaNum": {
-            "min": replica_min,
-            "max": replica_max,
-            "cpu": replica_cpu
-        }
-    }
-
-    # Convert the dictionary to a JSON string
-    json_data = json.dumps(data, indent=4)
-
-    if VERBOSE is not None:
-        print("- DEPLOYMENT REQUEST DATA:", json_data)
-    
-    deploy_headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    
-    print(f"Deploying application {application_name} in runtime: {runtime_name}.")
-    stackspot_cloud_deployments_url_stg = "https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments"
-    r2 = requests.post(
-            url=stackspot_cloud_deployments_url_stg, 
-            headers=deploy_headers,
-            data=json_data
-        )
-
-    if r2.status_code == 201:
-        d2 = r2.json()
-        deploymentId = d2["deploymentId"]
-        save_output('deployment_id', deploymentId)
-        print(f"- DEPLOYMENT successfully started with ID: {deploymentId}")
-   
-    else:
-        print("- Error starting cloud deployment")
-        print("- Status:", r2.status_code)
-        print("- Error:", r2.reason)
-        print("- Response:", r2.text)    
-        exit(1)
+if r2.status_code == 201:
+    d2 = r2.json()
+    deployment_id = d2["deploymentId"]
+    print(f"- DEPLOYMENT successfully started with ID: {deployment_id}")
 
 else:
-    print("- Error during IAM authentication")
-    print("- Status:", r1.status_code)
-    print("- Error:", r1.reason)
-    print("- Response:", r1.text)
+    print("- Error starting cloud deployment")
+    print("- Status:", r2.status_code)
+    print("- Error:", r2.reason)
+    print("- Response:", r2.text)    
     exit(1)
+
+check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers)

@@ -1,6 +1,6 @@
-name: 'Runtime Manager Action'
+name: 'Cloud Deploy Action'
 
-description: 'Runtime Manager Action'
+description: 'Cloud Deploy Action'
 
 inputs:
   CLIENT_ID:
@@ -12,20 +12,12 @@ inputs:
   CLIENT_REALM:
     description: Account client realm
     required: true
-  IAC_REGION:
-    description: Region configuration for iac
-    required: true
   VERBOSE:
     description: Verbose configuration
     required: false
   APPLICATION_FILE:
     description: Verbose configuration
     required: true
-
-outputs:
-  deployment_id:
-    description: "DEPLOYMENT ID"
-    value: ${{ steps.deployment.outputs.deployment_id }}
 
 runs:
   using: "composite"
