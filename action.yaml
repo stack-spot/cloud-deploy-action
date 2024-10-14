@@ -1,0 +1,70 @@
+name: 'Runtime Manager Action'
+
+description: 'Runtime Manager Action'
+
+inputs:
+  CLIENT_ID:
+    description: Account client id
+    required: true
+  CLIENT_KEY:
+    description: Account client secret key
+    required: true
+  CLIENT_REALM:
+    description: Account client realm
+    required: true
+  IAC_REGION:
+    description: Region configuration for iac
+    required: true
+  VERBOSE:
+    description: Verbose configuration
+    required: false
+  APPLICATION_FILE:
+    description: Verbose configuration
+    required: true
+
+outputs:
+  deployment_id:
+    description: "DEPLOYMENT ID"
+    value: ${{ steps.deployment.outputs.deployment_id }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check Runner
+      run: echo 🤖 OS runner is $(uname)
+      shell: bash
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4.7.1
+      with:
+        python-version: '3.10' 
+
+    - name: Install python libraries 
+      run: pip install requests ruamel-yaml==0.17.33
+      shell: bash
+
+    - name: Start StackSpot Cloud Deploy
+      id: deployment
+      env:
+        CLIENT_ID: ${{ inputs.CLIENT_ID }}
+        CLIENT_KEY: ${{ inputs.CLIENT_KEY }}
+        CLIENT_REALM: ${{ inputs.CLIENT_REALM }}
+        VERBOSE: ${{ inputs.VERBOSE }}
+        APPLICATION_FILE: ${{ inputs.APPLICATION_FILE }}
+      run: |
+        if [ ${{runner.os}} != 'Windows' ]; then
+          python3 ${{ github.action_path }}/deployment.py
+        elif [ ${{runner.os}} == 'Windows' ]; then
+          python ${{ github.action_path }}\deployment.py
+        else
+          echo "${{runner.os}} not supported"
+          exit 1
+        fi
+      shell: bash
+
+branding:
+    icon: 'terminal'
+    color: 'gray-dark'
