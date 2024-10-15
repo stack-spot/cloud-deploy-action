@@ -38,12 +38,35 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
         d1 = r1.json()
         access_token = d1["access_token"]
         print("✅ Successfully authenticated!")
-        return access_token  # Return the access token
+        return access_token
     else:
         print("❌ Error during IAM authentication")
         print("- Status:", r1.status_code)
         print("- Error:", r1.reason)
         print("- Response:", r1.text)
+        exit(1)
+
+
+def deployment(application_name, runtime_name, deploy_headers):
+    print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_name}".')
+    stackspot_cloud_deployments_url_stg = "https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments"
+    r2 = requests.post(
+            url=stackspot_cloud_deployments_url_stg, 
+            headers=deploy_headers,
+            data=json_data
+        )
+
+    if r2.status_code == 200:
+        d2 = r2.json()
+        deployment_id = d2["deploymentId"]
+        print(f"✅ DEPLOYMENT successfully started with ID: {deployment_id}")
+        return deployment_id
+
+    else:
+        print("❌ Error starting cloud deployment")
+        print("- Status:", r2.status_code)
+        print("- Error:", r2.reason)
+        print("- Response:", r2.text)    
         exit(1)
 
 
@@ -66,7 +89,7 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
             
             # Check if the deployment status is "UP"
             if deployment_status == "UP":
-                print(f"✅ Deployment concluded for application {application_name} in runtime: {runtime_name}.")
+                print(f'✅ Deployment concluded for application "{application_name}" in runtime: "{runtime_name}".')
                 print(f"📊 Check the application status on {application_portal_url_stg}/{application_id}")
                 break  # Exit the loop once the status is "UP"
             else:
@@ -93,6 +116,7 @@ def build_pipeline_url() -> str:
     url = f"{GITHUB_SERVER_URL}/{GITHUB_REPOSITORY}/actions/runs/{GITHUB_RUN_ID}"
     return url
 
+# MAIN EXECUTION
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
@@ -192,25 +216,5 @@ if VERBOSE is not None:
 
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
 deploy_headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-
-print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_name}".')
-stackspot_cloud_deployments_url_stg = "https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments"
-r2 = requests.post(
-        url=stackspot_cloud_deployments_url_stg, 
-        headers=deploy_headers,
-        data=json_data
-    )
-
-if r2.status_code == 200:
-    d2 = r2.json()
-    deployment_id = d2["deploymentId"]
-    print(f"✅ DEPLOYMENT successfully started with ID: {deployment_id}")
-
-else:
-    print("❌ Error starting cloud deployment")
-    print("- Status:", r2.status_code)
-    print("- Error:", r2.reason)
-    print("- Response:", r2.text)    
-    exit(1)
-
+deployment_id = deployment(application_name, runtime_name, deploy_headers)
 check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers)
