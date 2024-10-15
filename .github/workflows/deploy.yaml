@@ -16,9 +16,9 @@ jobs:
         uses: stack-spot/cloud-deploy-action@feat/1/action-stg
         id: deploy
         with:
-          CLIENT_REALM: ${{ secrets.CLIENT_REALM }}
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_KEY: ${{ secrets.CLIENT_KEY }}
+          CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
+          CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
           APPLICATION_FILE: ${{ github.workspace }}/.stk/application.yaml
           VERBOSE: true
  
