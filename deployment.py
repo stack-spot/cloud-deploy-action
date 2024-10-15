@@ -23,7 +23,7 @@ def safe_load(content: str) -> dict:
 
 def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
      # Gather authentication data
-    iam_url_stg = [ f"https://iam-auth-ssr.stg.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"]
+    iam_url_stg = f"https://iam-auth-ssr.stg.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"
     iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     iam_data = {"client_id": f"{CLIENT_ID}", "grant_type": "client_credentials", "client_secret": f"{CLIENT_KEY}"}
 
@@ -201,7 +201,7 @@ r2 = requests.post(
         data=json_data
     )
 
-if r2.status_code == 201:
+if r2.status_code == 200:
     d2 = r2.json()
     deployment_id = d2["deploymentId"]
     print(f"- DEPLOYMENT successfully started with ID: {deployment_id}")
