@@ -27,7 +27,7 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
     iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     iam_data = {"client_id": f"{CLIENT_ID}", "grant_type": "client_credentials", "client_secret": f"{CLIENT_KEY}"}
 
-    print("Authenticating...")
+    print("⚙️ Authenticating...")
     r1 = requests.post(
             url=iam_url_stg, 
             headers=iam_headers, 
@@ -37,10 +37,10 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
     if r1.status_code == 200:
         d1 = r1.json()
         access_token = d1["access_token"]
-        print("Successfully authenticated!")
+        print("✅ Successfully authenticated!")
         return access_token  # Return the access token
     else:
-        print("- Error during IAM authentication")
+        print("❌ Error during IAM authentication")
         print("- Status:", r1.status_code)
         print("- Error:", r1.reason)
         print("- Response:", r1.text)
@@ -52,7 +52,7 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
     application_portal_url_stg = "https://cloud.stg.stackspot.com/applications"
     
     while True:
-        print(f"Checking application {application_name} deployment status in runtime: {runtime_name}.")
+        print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_name}".')
         
         # Make the request to check the deployment status
         r3 = requests.get(
@@ -66,11 +66,11 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
             
             # Check if the deployment status is "UP"
             if deployment_status == "UP":
-                print(f"Deployment concluded for application {application_name} in runtime: {runtime_name}.")
-                print(f"Check the application status on {application_portal_url_stg}/{application_id}")
+                print(f"✅ Deployment concluded for application {application_name} in runtime: {runtime_name}.")
+                print(f"📊 Check the application status on {application_portal_url_stg}/{application_id}")
                 break  # Exit the loop once the status is "UP"
             else:
-                print(f"Current deployment status: {deployment_status}. Retrying in 5 seconds...")   
+                print(f"⚙️ Current deployment status: {deployment_status}. Retrying in 5 seconds...")   
         else:
             print("- Error getting deployment details")
             print("- Status:", r3.status_code)
@@ -103,7 +103,7 @@ APPLICATION_FILE = os.getenv("APPLICATION_FILE")
 inputs_list = [CLIENT_ID, CLIENT_KEY, CLIENT_REALM]
 
 if None in inputs_list:
-    print("- Some mandatory input is empty. Please, check the input list.")
+    print("❌ Some credential is missing!")
     exit(1)
 
 # Load the YAML content
@@ -118,52 +118,52 @@ runtime_name = yaml_data['spec']['runtime']['name']
 
 application_id = yaml_data['metadata']['id']
 if application_id is None:
-        print("- Application ID not informed or couldn't be extracted.")
+        print("❌ Application ID not informed or couldn't be extracted.")
         exit(1) 
 runtime_id = yaml_data['spec']['runtime']['id']
 if runtime_id is None:
-        print("- Runtime ID not informed or couldn't be extracted.")
+        print("❌ Runtime ID not informed or couldn't be extracted.")
         exit(1) 
 image_url = yaml_data['spec']['container']['imageUrl']
 if image_url is None:
-        print("- Image URL not informed or couldn't be extracted.")
+        print("❌ Image URL not informed or couldn't be extracted.")
         exit(1) 
 tag = yaml_data['spec']['container']['tag']
 if tag is None:
-        print("- TAG not informed or couldn't be extracted.")
+        print("❌ TAG not informed or couldn't be extracted.")
         exit(1) 
 container_port = yaml_data['spec']['container']['port']
 if container_port is None:
-        print("- Container Port not informed or couldn't be extracted.")
+        print("❌ Container Port not informed or couldn't be extracted.")
         exit(1) 
 health_check_path = yaml_data['spec']['container']['healthCheckPath']
 if health_check_path is None:
-        print("- Health Check Path not informed or couldn't be extracted.")
+        print("❌ Health Check Path not informed or couldn't be extracted.")
         exit(1) 
 env_vars = yaml_data['spec']['container']['envVars']
 mem = yaml_data['spec']['runtime']['memory']
 if mem is None:
-        print("- Memory not informed or couldn't be extracted.")
+        print("❌ Memory not informed or couldn't be extracted.")
         exit(1) 
 cpu = yaml_data['spec']['runtime']['cpu']
 if cpu is None:
-        print("- CPU not informed or couldn't be extracted.")
+        print("❌ CPU not informed or couldn't be extracted.")
         exit(1) 
 replica_min = yaml_data['spec']['runtime']['replicaNum']['min']
 if replica_min is None:
-        print("- Replica MIN config not informed or couldn't be extracted.")
+        print("❌ Replica MIN config not informed or couldn't be extracted.")
         exit(1) 
 replica_max = yaml_data['spec']['runtime']['replicaNum']['max']
 if replica_min is None:
-        print("- Replica MAX config not informed or couldn't be extracted.")
+        print("❌ Replica MAX config not informed or couldn't be extracted.")
         exit(1) 
 replica_cpu = yaml_data['spec']['runtime']['replicaNum']['cpu']
 if replica_min is None:
-        print("- Replica CPU config not informed or couldn't be extracted.")
+        print("❌ Replica CPU config not informed or couldn't be extracted.")
         exit(1) 
 
 if VERBOSE is not None:
-    print("- APPLICATION FILE:", yaml_data)
+    print("🕵️ APPLICATION FILE:", yaml_data)
 
 # Create the DEPLOYMENT JSON structure
 data = {
@@ -188,12 +188,12 @@ data = {
 json_data = json.dumps(data, indent=4)
 
 if VERBOSE is not None:
-    print("- DEPLOYMENT REQUEST DATA:", json_data)
+    print("🕵️ DEPLOYMENT REQUEST DATA:", json_data)
 
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
 deploy_headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
 
-print(f"Deploying application {application_name} in runtime: {runtime_name}.")
+print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_name}".')
 stackspot_cloud_deployments_url_stg = "https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments"
 r2 = requests.post(
         url=stackspot_cloud_deployments_url_stg, 
@@ -204,10 +204,10 @@ r2 = requests.post(
 if r2.status_code == 200:
     d2 = r2.json()
     deployment_id = d2["deploymentId"]
-    print(f"- DEPLOYMENT successfully started with ID: {deployment_id}")
+    print(f"✅ DEPLOYMENT successfully started with ID: {deployment_id}")
 
 else:
-    print("- Error starting cloud deployment")
+    print("❌ Error starting cloud deployment")
     print("- Status:", r2.status_code)
     print("- Error:", r2.reason)
     print("- Response:", r2.text)    
