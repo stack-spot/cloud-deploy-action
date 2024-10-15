@@ -3,6 +3,7 @@ import requests
 import json
 import time
 from ruamel.yaml import YAML
+from pathlib import Path
 from io import StringIO
 
 
@@ -106,7 +107,10 @@ if None in inputs_list:
     exit(1)
 
 # Load the YAML content
-yaml_data = yaml.safe_load(APPLICATION_FILE)
+with open(Path(APPLICATION_FILE), 'r') as file:
+    yaml_data = file.read()
+
+yaml_data = safe_load(yaml_data)
 
 # Extract and check values from the YAML structure
 application_name = yaml_data['metadata']['name']
