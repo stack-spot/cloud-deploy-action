@@ -22,7 +22,7 @@ jobs:
     
     deploy:
         needs: [build]
-        uses: stacks-spot/cloud-deploy-action/.github/workflows/reusable-workflow.yaml@feat/1/action-stg
+        uses: stacks-spot/cloud-deploy-action/.github/workflows/reusable-deploy.yaml@feat/1/action-stg
         secrets:
             CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
             CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
