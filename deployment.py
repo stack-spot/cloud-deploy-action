@@ -93,7 +93,7 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
             
             # Check if the deployment status is "UP"
             if deployment_status == "UP":
-                print(f'✅ Deployment concluded for application "{application_name}" in runtime: "{runtime_name}".')
+                print(f'✅ Deployment concluded ({deployment_status}) for application "{application_name}" in runtime: "{runtime_name}".')
                 print(f"📊 Check the application status on {application_portal_url_stg}/{application_id}")
                 break  # Exit the loop once the status is "UP"
             else:
