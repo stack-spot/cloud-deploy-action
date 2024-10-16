@@ -37,6 +37,7 @@ Field | Mandatory | Default Value | Observation
 **CLIENT_KEY** | YES | N/A |[StackSpot](https://stackspot.com/en/settings/access-token) Client KEY.
 **CLIENT_REALM** | YES | N/A |[StackSpot](https://stackspot.com/en/settings/access-token) Client Realm.
 **APPLICATION_FILE** | YES | N/A | StackSpot application config file (generally in .stk folder)
+**IMAGE_TAG** | YES | N/A | Image tag to use for deploy
 **VERBOSE** | NO | `false` | Whether to show extra logs during execution. (e.g: `true`).
 
 * * *
