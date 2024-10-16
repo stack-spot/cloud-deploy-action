@@ -77,8 +77,9 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
     stackspot_cloud_deployments_details_url_stg = f"https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments/details/{deployment_id}"
     application_portal_url_stg = "https://cloud.stg.stackspot.com/applications"
     
+    i = 0
     while True:
-        print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_name}".')
+        print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
         
         # Make the request to check the deployment status
         r3 = requests.get(
@@ -96,6 +97,7 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
                 print(f"📊 Check the application status on {application_portal_url_stg}/{application_id}")
                 break  # Exit the loop once the status is "UP"
             else:
+                i = i+1
                 print(f"⚙️ Current deployment status: {deployment_status}. Retrying in 5 seconds...")   
         else:
             print("- Error getting deployment details")
