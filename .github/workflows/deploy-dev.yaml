@@ -19,11 +19,17 @@ jobs:
     
     deploy:
         needs: [build]
-        uses: stack-spot/cloud-deploy-action/.github/workflows/reusable-deploy.yaml@feat/1/action-stg
-        secrets:
-            CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
-            CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
-            CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
-        with:
-            APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-dev.yaml
-            IMAGE_TAG: ${{needs.build.outputs.tag}}
+        runs-on: engineering-runners-stg
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4.2.1
+            - name: Deploy repo application
+              uses: stack-spot/cloud-deploy-action@feat/1/action-stg
+              id: deploy
+              with:
+                CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
+                CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
+                CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
+                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-dev.yaml
+                IMAGE_TAG: ${{needs.build.outputs.tag}}
+                VERBOSE: true
