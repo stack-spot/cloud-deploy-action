@@ -39,7 +39,15 @@ runs:
         cache: 'pip' # caching pip dependencies
 
     - name: Install python libraries 
-      run: pip install requests ruamel-yaml==0.18.6
+      run: |
+        if [ ${{runner.os}} != 'Windows' ]; then
+          python3 ${{ github.action_path }}/requirements.txt
+        elif [ ${{runner.os}} == 'Windows' ]; then
+          python ${{ github.action_path }}\requirements.txt
+        else
+          echo "${{runner.os}} not supported"
+          exit 1
+        fi
       shell: bash
 
     - name: Start StackSpot Cloud Deploy
