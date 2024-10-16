@@ -14,8 +14,8 @@ To get the account keys (`CLIENT_ID`, `CLIENT_KEY` and `CLIENT_REALM`), please l
 
 ```yaml
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.1
       - name: Deploy repo application
         uses: stack-spot/cloud-deploy-action@main
         id: deploy
@@ -23,7 +23,8 @@ To get the account keys (`CLIENT_ID`, `CLIENT_KEY` and `CLIENT_REALM`), please l
           CLIENT_REALM: ${{ secrets.CLIENT_REALM }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_KEY: ${{ secrets.CLIENT_KEY }}
-          APPLICATION_FILE: ${{ github.workspace }}/.stk/application.yaml
+          APPLICATION_FILE: ${{ github.workspace }}/stackspot/application.yaml
+          IMAGE_TAG: latest
           VERBOSE: true
 ```
 

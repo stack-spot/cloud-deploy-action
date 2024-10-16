@@ -2,8 +2,8 @@ name: Deploy STG
 
 on:
     push:
-      branches:
-          - feat/1/action-stg
+        branches:
+           - feat/1/action-stg
     workflow_dispatch:
   
 concurrency:
