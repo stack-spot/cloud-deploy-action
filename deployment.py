@@ -201,7 +201,7 @@ data = {
     "applicationId": application_id,
     "applicationName": application_name,
     "action": "DEPLOY",
-    "containerPort": "{container_port}",
+    "containerPort": f"{container_port}",
     "healthCheckPath": health_check_path,
     "envVars": env_vars,
     "imageUrl": image_url,
