@@ -16,7 +16,10 @@ inputs:
     description: Verbose configuration
     required: false
   APPLICATION_FILE:
-    description: Verbose configuration
+    description: Application file path to use
+    required: true
+  IMAGE_TAG:
+    description: Image tag to use
     required: true
 
 runs:
@@ -46,6 +49,7 @@ runs:
         CLIENT_REALM: ${{ inputs.CLIENT_REALM }}
         VERBOSE: ${{ inputs.VERBOSE }}
         APPLICATION_FILE: ${{ inputs.APPLICATION_FILE }}
+        IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
       run: |
         if [ ${{runner.os}} != 'Windows' ]; then
           python3 ${{ github.action_path }}/deployment.py

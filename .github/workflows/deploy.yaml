@@ -20,5 +20,6 @@ jobs:
           CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
           CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
           APPLICATION_FILE: ${{ github.workspace }}/.stk/application.yaml
+          IMAGE_TAG: demo1
           VERBOSE: true
  

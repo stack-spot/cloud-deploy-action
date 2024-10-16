@@ -21,6 +21,7 @@ def safe_load(content: str) -> dict:
     return yml.load(StringIO(content))
 
 
+# Call to the StackSpot IAM API endpoint to authenticate
 def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
      # Gather authentication data
     iam_url_stg = f"https://iam-auth-ssr.stg.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"
@@ -47,6 +48,7 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
         exit(1)
 
 
+# Call to the Cloud Platform API endpoint to start deployment
 def deployment(application_name, runtime_name, deploy_headers):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_name}".')
     stackspot_cloud_deployments_url_stg = "https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments"
@@ -70,6 +72,7 @@ def deployment(application_name, runtime_name, deploy_headers):
         exit(1)
 
 
+# Call to the Cloud Platform API endpoint to check deployment status
 def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers):
     stackspot_cloud_deployments_details_url_stg = f"https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments/details/{deployment_id}"
     application_portal_url_stg = "https://cloud.stg.stackspot.com/applications"
@@ -117,12 +120,12 @@ def build_pipeline_url() -> str:
     return url
 
 # MAIN EXECUTION
-
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
 CLIENT_REALM = os.getenv("CLIENT_REALM")
 VERBOSE = os.getenv("VERBOSE")
 APPLICATION_FILE = os.getenv("APPLICATION_FILE")
+IMAGE_TAG = os.getenv("IMAGE_TAG")
 
 inputs_list = [CLIENT_ID, CLIENT_KEY, CLIENT_REALM]
 
@@ -139,7 +142,9 @@ yaml_data = safe_load(yaml_data)
 # Extract and check values from the YAML structure
 application_name = yaml_data['metadata']['name']
 runtime_name = yaml_data['spec']['runtime']['name']
-
+if IMAGE_TAG is None:
+        print("❌ Image Tag to deploy not informed.")
+        exit(1) 
 application_id = yaml_data['metadata']['id']
 if application_id is None:
         print("❌ Application ID not informed or couldn't be extracted.")
@@ -151,10 +156,6 @@ if runtime_id is None:
 image_url = yaml_data['spec']['container']['imageUrl']
 if image_url is None:
         print("❌ Image URL not informed or couldn't be extracted.")
-        exit(1) 
-tag = yaml_data['spec']['container']['tag']
-if tag is None:
-        print("❌ TAG not informed or couldn't be extracted.")
         exit(1) 
 container_port = yaml_data['spec']['container']['port']
 if container_port is None:
@@ -197,7 +198,7 @@ data = {
     "healthCheckPath": health_check_path,
     "envVars": env_vars,
     "imageUrl": image_url,
-    "tag": tag,
+    "tag": IMAGE_TAG,
     "runtimeId": runtime_id,
     "mem": mem,
     "cpu": cpu,
