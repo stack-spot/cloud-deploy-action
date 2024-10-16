@@ -7,11 +7,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.imageTag}}
+    steps:
+      - name: Build process generating a tag
+        id: tag
+        run: echo "imageTag=demo1" >> $GITHUB_OUTPUT
+
   deploy:
     runs-on: engineering-runners-stg
+    needs: [build]
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.1
       - name: Deploy repo application
         uses: stack-spot/cloud-deploy-action@feat/1/action-stg
         id: deploy
@@ -20,6 +30,6 @@ jobs:
           CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
           CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
           APPLICATION_FILE: ${{ github.workspace }}/.stk/application.yaml
-          IMAGE_TAG: demo1
+          IMAGE_TAG: ${{needs.build.outputs.tag}}
           VERBOSE: true
  
