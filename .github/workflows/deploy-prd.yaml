@@ -1,9 +1,6 @@
-name: Deploy STG
+name: Deploy PRD
 
 on:
-    push:
-      branches:
-          - feat/1/action-stg
     workflow_dispatch:
   
 concurrency:
@@ -28,5 +25,5 @@ jobs:
             CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
             CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
         with:
-            APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-stg.yaml
+            APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-prd.yaml
             IMAGE_TAG: ${{needs.build.outputs.tag}}
