@@ -41,9 +41,9 @@ runs:
     - name: Install python libraries 
       run: |
         if [ ${{runner.os}} != 'Windows' ]; then
-          python3 ${{ github.action_path }}/requirements.txt
+          pip install -r ${{ github.action_path }}/requirements.txt
         elif [ ${{runner.os}} == 'Windows' ]; then
-          python ${{ github.action_path }}\requirements.txt
+          pip install -r ${{ github.action_path }}\requirements.txt
         else
           echo "${{runner.os}} not supported"
           exit 1
