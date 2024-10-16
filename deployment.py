@@ -142,10 +142,13 @@ with open(Path(APPLICATION_FILE), 'r') as file:
 yaml_data = safe_load(yaml_data)
 
 # Extract and check values from the YAML structure
-application_name = yaml_data['metadata']['name']
-runtime_name = yaml_data['spec']['runtime']['name']
+
 if IMAGE_TAG is None:
         print("❌ Image Tag to deploy not informed.")
+        exit(1) 
+application_name = yaml_data['metadata']['name']
+if application_name is None:
+        print("❌ Application Name not informed or couldn't be extracted.")
         exit(1) 
 application_id = yaml_data['metadata']['id']
 if application_id is None:
@@ -155,6 +158,7 @@ runtime_id = yaml_data['spec']['runtime']['id']
 if runtime_id is None:
         print("❌ Runtime ID not informed or couldn't be extracted.")
         exit(1) 
+runtime_name = yaml_data['spec']['runtime']['name']
 image_url = yaml_data['spec']['container']['imageUrl']
 if image_url is None:
         print("❌ Image URL not informed or couldn't be extracted.")
@@ -195,8 +199,9 @@ if VERBOSE is not None:
 # Create the DEPLOYMENT JSON structure
 data = {
     "applicationId": application_id,
+    "applicationName": application_name,
     "action": "DEPLOY",
-    "containerPort": container_port,
+    "containerPort": "{container_port}",
     "healthCheckPath": health_check_path,
     "envVars": env_vars,
     "imageUrl": image_url,

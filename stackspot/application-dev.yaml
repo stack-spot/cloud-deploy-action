@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Application
 metadata:
   id: 01J9YNDVH34W2Y4Y924T5CFVD7
-  name: My demo app
+  name: app
 spec:
   runtime:
     id: 01J9C694269APB2TCNAG9CJYVC
