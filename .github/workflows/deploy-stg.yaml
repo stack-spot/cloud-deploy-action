@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Build process generating a tag
         id: tag
-        run: echo "imageTag=demo1" >> $GITHUB_OUTPUT
+        run: echo "imageTag=latest" >> $GITHUB_OUTPUT
 
   deploy:
     runs-on: engineering-runners-stg
