@@ -19,12 +19,12 @@ jobs:
     
     deploy:
         needs: [build]
-        runs-on: engineering-runners-stg
+        runs-on: ubuntu-latest
         steps:
             - name: Checkout repo
               uses: actions/checkout@v4.2.1
             - name: Deploy repo application
-              uses: stack-spot/cloud-deploy-action@feat/1/action-stg
+              uses: ./
               id: deploy
               with:
                 CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
