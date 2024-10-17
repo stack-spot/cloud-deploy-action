@@ -24,13 +24,13 @@ def safe_load(content: str) -> dict:
 # Call to the StackSpot IAM API endpoint to authenticate
 def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
      # Gather authentication data
-    iam_url_stg = f"https://iam-auth-ssr.stg.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"
+    iam_url = f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"
     iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     iam_data = {"client_id": f"{CLIENT_ID}", "grant_type": "client_credentials", "client_secret": f"{CLIENT_KEY}"}
 
     print("⚙️ Authenticating...")
     r1 = requests.post(
-            url=iam_url_stg, 
+            url=iam_url, 
             headers=iam_headers, 
             data=iam_data
         )
@@ -51,9 +51,9 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
 # Call to the Cloud Platform API endpoint to start deployment
 def deployment(application_name, runtime_name, deploy_headers):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_name}".')
-    stackspot_cloud_deployments_url_stg = "https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments"
+    stackspot_cloud_deployments_url = "https://cloud-cloud-platform-api.prd.stackspot.com/v1/deployments"
     r2 = requests.post(
-            url=stackspot_cloud_deployments_url_stg, 
+            url=stackspot_cloud_deployments_url, 
             headers=deploy_headers,
             data=json_data
         )
@@ -74,8 +74,8 @@ def deployment(application_name, runtime_name, deploy_headers):
 
 # Call to the Cloud Platform API endpoint to check deployment status
 def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers):
-    stackspot_cloud_deployments_details_url_stg = f"https://cloud-cloud-platform-api.stg.stackspot.com/v1/deployments/details/{deployment_id}"
-    application_portal_url_stg = "https://cloud.stg.stackspot.com/applications"
+    stackspot_cloud_deployments_details_url = f"https://cloud-cloud-platform-api.prd.stackspot.com/v1/deployments/details/{deployment_id}"
+    application_portal_url = "https://cloud.prd.stackspot.com/applications"
     
     i = 0
     while True:
@@ -83,7 +83,7 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
         
         # Make the request to check the deployment status
         r3 = requests.get(
-            url=stackspot_cloud_deployments_details_url_stg, 
+            url=stackspot_cloud_deployments_details_url, 
             headers=deploy_headers
         )
         
@@ -94,7 +94,7 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
             # Check if the deployment status is "UP"
             if deployment_status == "UP":
                 print(f'✅ Deployment concluded ({deployment_status}) for application "{application_name}" in runtime: "{runtime_name}".')
-                print(f"📊 Check the application status on {application_portal_url_stg}/{application_id}")
+                print(f"📊 Check the application status on {application_portal_url}/{application_id}")
                 break  # Exit the loop once the status is "UP"
             else:
                 i = i+1
