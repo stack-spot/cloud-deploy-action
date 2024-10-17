@@ -1,0 +1,63 @@
+name: 'Cloud Deploy Action'
+
+description: 'Cloud Deploy Action'
+
+inputs:
+  CLIENT_ID:
+    description: Account client id
+    required: true
+  CLIENT_KEY:
+    description: Account client secret key
+    required: true
+  CLIENT_REALM:
+    description: Account client realm
+    required: true
+  VERBOSE:
+    description: Verbose configuration
+    required: false
+  APPLICATION_FILE:
+    description: Application file path to use
+    required: true
+  IMAGE_TAG:
+    description: Image tag to use
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check Runner
+      run: echo 🤖 OS runner is $(uname)
+      shell: bash
+
+    - name: Setup Python
+      uses: actions/setup-python@v5.2.0
+      with:
+        python-version: '3.12'
+
+    - name: Install python libraries 
+      run: pip install requests ruamel-yaml==0.18.6
+      shell: bash
+
+    - name: Start StackSpot Cloud Deploy
+      id: deployment
+      env:
+        CLIENT_ID: ${{ inputs.CLIENT_ID }}
+        CLIENT_KEY: ${{ inputs.CLIENT_KEY }}
+        CLIENT_REALM: ${{ inputs.CLIENT_REALM }}
+        VERBOSE: ${{ inputs.VERBOSE }}
+        APPLICATION_FILE: ${{ inputs.APPLICATION_FILE }}
+        IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+      run: |
+        if [ ${{runner.os}} != 'Windows' ]; then
+          python3 ${{ github.action_path }}/deployment.py
+        elif [ ${{runner.os}} == 'Windows' ]; then
+          python ${{ github.action_path }}\deployment.py
+        else
+          echo "${{runner.os}} not supported"
+          exit 1
+        fi
+      shell: bash
+
+branding:
+    icon: 'terminal'
+    color: 'gray-dark'

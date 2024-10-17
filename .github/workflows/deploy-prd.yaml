@@ -1,0 +1,35 @@
+name: Deploy PRD
+
+on:
+    workflow_dispatch:
+  
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        outputs:
+            tag: ${{ steps.tag.outputs.imageTag}}
+        steps:
+            - name: Build process generating a tag
+              id: tag
+              run: echo "imageTag=latest" >> $GITHUB_OUTPUT
+    
+    deploy:
+        needs: [build]
+        runs-on: engineering-runners-stg
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4.2.1
+            - name: Deploy repo application
+              uses: stack-spot/cloud-deploy-action@feat/1/action-stg
+              id: deploy
+              with:
+                CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
+                CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
+                CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
+                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-prd.yaml
+                IMAGE_TAG: ${{needs.build.outputs.tag}}
+                VERBOSE: true
