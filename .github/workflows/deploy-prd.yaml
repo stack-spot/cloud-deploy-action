@@ -24,12 +24,12 @@ jobs:
             - name: Checkout repo
               uses: actions/checkout@v4.2.1
             - name: Deploy repo application
-              uses: ./
+              uses: stack-spot/cloud-deploy-action@main
               id: deploy
               with:
-                CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
-                CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
-                CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
+                CLIENT_REALM: ${{ secrets.CLIENT_REALM_PRD }}
+                CLIENT_ID: ${{ secrets.CLIENT_ID_PRD }}
+                CLIENT_KEY: ${{ secrets.CLIENT_KEY_PRD }}
                 APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-prd.yaml
                 IMAGE_TAG: ${{needs.build.outputs.tag}}
                 VERBOSE: true

@@ -46,3 +46,43 @@ Field | Mandatory | Default Value | Observation
 ## License
 
 [Apache License 2.0](https://github.com/stack-spot/cloud-deploy-action/blob/main/LICENSE)
+
+* * *
+
+## Development
+
+### STG environment
+
+```yaml
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.1
+      - name: Deploy repo application
+        uses: stack-spot/cloud-deploy-action@stg
+        id: deploy
+        with:
+          CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
+          CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
+          APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-stg.yaml
+          IMAGE_TAG: latest
+          VERBOSE: true
+```
+
+### DEV environment
+
+```yaml
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.1
+      - name: Deploy repo application
+        uses: stack-spot/cloud-deploy-action@dev
+        id: deploy
+        with:
+          CLIENT_REALM: ${{ secrets.CLIENT_REALM_DEV }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID_DEV }}
+          CLIENT_KEY: ${{ secrets.CLIENT_KEY_DEV }}
+          APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-dev.yaml
+          IMAGE_TAG: latest
+          VERBOSE: true
+```
