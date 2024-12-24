@@ -18,9 +18,16 @@ spec:
     port: 5000
     healthCheckPath: /
     envVars:
-      - key: ENV_VAR_1
-        value: value1
-      - key: ENV_VAR_2
-        value: value2
-      - key: ENV_VAR_3
-        value: value3
+      - key: ENV_VAR_DEMO1
+        value: env_value1
+      - key: ENV_VAR_DEMO2
+        value: env_value2
+      - key: ENV_VAR_DEMO3
+        value: env_value3
+    secretVars:
+      - key: SECRET_VAR_DEMO1
+        value: secret_value1
+      - key: SECRET_VAR_DEMO2
+        value: secret_value2
+      - key: SECRET_VAR_DEMO3
+        value: secret_value3
