@@ -12,7 +12,6 @@ spec:
     replicaNum:
       min: 2
       max: 10
-      cpu: 8
   container:
     imageUrl: 300543077521.dkr.ecr.sa-east-1.amazonaws.com/cloud-flask-demo
     port: 5000
