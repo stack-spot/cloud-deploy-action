@@ -51,7 +51,7 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
 # Call to the Cloud Platform API endpoint to start deployment
 def deployment(application_name, runtime_name, deploy_headers):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_name}".')
-    stackspot_cloud_deployments_url = "https://cloud-cloud-platform-api.prd.stackspot.com/v1/deployments"
+    stackspot_cloud_deployments_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
     r2 = requests.post(
             url=stackspot_cloud_deployments_url, 
             headers=deploy_headers,
@@ -172,6 +172,7 @@ if health_check_path is None:
         print("❌ Health Check Path not informed or couldn't be extracted.")
         exit(1) 
 env_vars = yaml_data['spec']['container']['envVars']
+secret_vars = yaml_data['spec']['container']['secretVars']
 mem = yaml_data['spec']['runtime']['memory']
 if mem is None:
         print("❌ Memory not informed or couldn't be extracted.")
@@ -185,12 +186,8 @@ if replica_min is None:
         print("❌ Replica MIN config not informed or couldn't be extracted.")
         exit(1) 
 replica_max = yaml_data['spec']['runtime']['replicaNum']['max']
-if replica_min is None:
+if replica_max is None:
         print("❌ Replica MAX config not informed or couldn't be extracted.")
-        exit(1) 
-replica_cpu = yaml_data['spec']['runtime']['replicaNum']['cpu']
-if replica_min is None:
-        print("❌ Replica CPU config not informed or couldn't be extracted.")
         exit(1) 
 
 if VERBOSE is not None:
@@ -204,6 +201,7 @@ data = {
     "containerPort": f"{container_port}",
     "healthCheckPath": health_check_path,
     "envVars": env_vars,
+    "secretVars": secret_vars,
     "imageUrl": image_url,
     "tag": IMAGE_TAG,
     "runtimeId": runtime_id,
@@ -212,7 +210,6 @@ data = {
     "replicaNum": {
         "min": replica_min,
         "max": replica_max,
-        "cpu": replica_cpu
     }
 }
 
