@@ -19,7 +19,7 @@ jobs:
     
     deploy:
         needs: [build]
-        runs-on: engineering-runners-stg
+        runs-on: lite-runners-stg
         steps:
             - name: Checkout repo
               uses: actions/checkout@v4.2.1
