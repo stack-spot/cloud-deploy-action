@@ -1,4 +1,4 @@
-name: Deploy PRD
+name: Deploy DEV
 
 on:
     workflow_dispatch:
@@ -19,17 +19,17 @@ jobs:
     
     deploy:
         needs: [build]
-        runs-on: lite-runners-prd
+        runs-on: lite-runners-dev
         steps:
             - name: Checkout repo
               uses: actions/checkout@v4.2.1
             - name: Deploy repo application
-              uses: stack-spot/cloud-deploy-action@main
+              uses: stack-spot/cloud-deploy-action@stg
               id: deploy
               with:
-                CLIENT_REALM: ${{ secrets.CLIENT_REALM_PRD }}
-                CLIENT_ID: ${{ secrets.CLIENT_ID_PRD }}
-                CLIENT_KEY: ${{ secrets.CLIENT_KEY_PRD }}
-                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-prd.yaml
+                CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
+                CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
+                CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
+                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-stg.yaml
                 IMAGE_TAG: ${{needs.build.outputs.tag}}
                 VERBOSE: true

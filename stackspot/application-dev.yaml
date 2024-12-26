@@ -13,7 +13,7 @@ spec:
       min: 2
       max: 10
   container:
-    imageUrl: 300543077521.dkr.ecr.sa-east-1.amazonaws.com/cloud-flask-demo
+    imageUrl: 185072717495.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo
     port: 5000
     healthCheckPath: /healthz
     envVars:
