@@ -41,11 +41,13 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
 
 def deployment(application_name, runtime_id, deploy_headers, json_data):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_id}".')
-    deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
-    headers = {
-        "Authorization": deploy_headers["Authorization"],
-        "Content-Type": "application/json"
-    }
+        deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
+        headers = {
+            "Authorization": deploy_headers["Authorization"],
+            "Content-Type": "application/json"
+        }
+        print("Headers being sent:", headers)  # Debug line
+        print("JSON data being sent:", json_data)
     response = requests.post(url=deploy_url, headers=headers, data=json_data)
     if response.status_code == 200:
         deployment_id = response.json().get("deploymentId")
