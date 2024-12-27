@@ -44,11 +44,11 @@ def deployment(application_name, runtime_id, deploy_headers, json_data):
     deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
     headers = {
         "Authorization": deploy_headers["Authorization"],
-        "Content-Type": "application/json"
+        "accept": "application/json"
     }
     print("Headers being sent:", headers)  # Debug line
     print("JSON data being sent:", json_data)
-    response = requests.post(url=deploy_url, headers=headers, data=json_data)
+    response = requests.post(url=deploy_url, headers=headers, json=json.loads(json_data))
     if response.status_code == 200:
         deployment_id = response.json().get("deploymentId")
         print(f"✅ DEPLOYMENT successfully started with ID: {deployment_id}")
