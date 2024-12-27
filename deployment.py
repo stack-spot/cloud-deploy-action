@@ -157,6 +157,6 @@ if VERBOSE:
     print("🕵️ DEPLOYMENT REQUEST DATA:", json_data)
 
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
-deploy_headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+deploy_headers = {"Authorization": f"Bearer {access_token}"}
 deployment_id = deployment(application_name, runtime_id, deploy_headers, json_data)
 check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers)
