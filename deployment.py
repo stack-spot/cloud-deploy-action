@@ -41,13 +41,13 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
 
 def deployment(application_name, runtime_id, deploy_headers, json_data):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_id}".')
-        deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
-        headers = {
-            "Authorization": deploy_headers["Authorization"],
-            "Content-Type": "application/json"
-        }
-        print("Headers being sent:", headers)  # Debug line
-        print("JSON data being sent:", json_data)
+    deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
+    headers = {
+        "Authorization": deploy_headers["Authorization"],
+        "Content-Type": "application/json"
+    }
+    print("Headers being sent:", headers)  # Debug line
+    print("JSON data being sent:", json_data)
     response = requests.post(url=deploy_url, headers=headers, data=json_data)
     if response.status_code == 200:
         deployment_id = response.json().get("deploymentId")
@@ -84,6 +84,7 @@ def check_deployment_status(application_name, runtime_id, deployment_id, applica
         time.sleep(5)
         i += 1
 
+# Environment variables
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
 CLIENT_REALM = os.getenv("CLIENT_REALM")
@@ -100,6 +101,7 @@ with open(Path(APPLICATION_FILE), 'r') as file:
 
 print(yaml_data)
 
+# Extract data from YAML
 application_name = yaml_data.get('applicationName')
 application_id = yaml_data.get('applicationId')
 runtime_id = yaml_data.get('runtimeId')
@@ -138,6 +140,7 @@ if not IMAGE_TAG:
     print("❌ Image Tag to deploy not informed.")
     exit(1)
 
+# Prepare deployment data
 data = {
     "applicationId": application_id,
     "applicationName": application_name,
@@ -157,11 +160,12 @@ data = {
     }
 }
 
-json_data = json.dumps(data, indent=4)
+json_data = json.dumps(data)  # Removed indent=4
 if VERBOSE:
     print("🕵️ DEPLOYMENT REQUEST DATA:", json_data)
 
+# Execute deployment
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
-deploy_headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+deploy_headers = {"Authorization": f"Bearer {access_token}"}  # Removed Content-Type here
 deployment_id = deployment(application_name, runtime_id, deploy_headers, json_data)
 check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers)
