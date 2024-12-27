@@ -42,7 +42,9 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
 def deployment(application_name, runtime_id, deploy_headers, json_data):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_id}".')
     deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
-    response = requests.post(url=deploy_url, headers=deploy_headers, data=json_data)
+    # Ensure Content-Type is application/json
+    deploy_headers["Content-Type"] = "application/json"
+    response = requests.post(url=deploy_url, headers=deploy_headers, json=json.loads(json_data))
     if response.status_code == 200:
         deployment_id = response.json().get("deploymentId")
         print(f"✅ DEPLOYMENT successfully started with ID: {deployment_id}")
@@ -76,6 +78,7 @@ def check_deployment_status(application_name, runtime_id, deployment_id, applica
             print("- Response:", response.text)
             exit(1)
         time.sleep(5)
+        i += 1
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
@@ -93,7 +96,6 @@ with open(Path(APPLICATION_FILE), 'r') as file:
 
 print(yaml_data)
 
-# Extract values directly from the top-level structure
 application_name = yaml_data.get('applicationName')
 application_id = yaml_data.get('applicationId')
 runtime_id = yaml_data.get('runtimeId')
@@ -120,7 +122,6 @@ required_fields = {
     "replica_max": replica_max,
 }
 
-# Verificar quais campos estão faltando
 missing_fields = [field for field, value in required_fields.items() if not value]
 
 if missing_fields:
@@ -157,6 +158,6 @@ if VERBOSE:
     print("🕵️ DEPLOYMENT REQUEST DATA:", json_data)
 
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
-deploy_headers = {"Authorization": f"Bearer {access_token}"}
+deploy_headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
 deployment_id = deployment(application_name, runtime_id, deploy_headers, json_data)
 check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers)
