@@ -21,107 +21,74 @@ def safe_load(content: str) -> dict:
     return yml.load(StringIO(content))
 
 
-# Call to the StackSpot IAM API endpoint to authenticate
 def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
-     # Gather authentication data
     iam_url = f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"
     iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    iam_data = {"client_id": f"{CLIENT_ID}", "grant_type": "client_credentials", "client_secret": f"{CLIENT_KEY}"}
+    iam_data = {
+        "client_id": CLIENT_ID,
+        "grant_type": "client_credentials",
+        "client_secret": CLIENT_KEY
+    }
 
     print("⚙️ Authenticating...")
-    r1 = requests.post(
-            url=iam_url, 
-            headers=iam_headers, 
-            data=iam_data
-        )
+    response = requests.post(url=iam_url, headers=iam_headers, data=iam_data)
 
-    if r1.status_code == 200:
-        d1 = r1.json()
-        access_token = d1["access_token"]
+    if response.status_code == 200:
+        access_token = response.json().get("access_token")
         print("✅ Successfully authenticated!")
         return access_token
     else:
         print("❌ Error during IAM authentication")
-        print("- Status:", r1.status_code)
-        print("- Error:", r1.reason)
-        print("- Response:", r1.text)
+        print("- Status:", response.status_code)
+        print("- Error:", response.reason)
+        print("- Response:", response.text)
         exit(1)
 
 
-# Call to the Cloud Platform API endpoint to start deployment
-def deployment(application_name, runtime_name, deploy_headers):
+def deployment(application_name, runtime_name, deploy_headers, json_data):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_name}".')
-    stackspot_cloud_deployments_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
-    r2 = requests.post(
-            url=stackspot_cloud_deployments_url, 
-            headers=deploy_headers,
-            data=json_data
-        )
+    deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
+    response = requests.post(url=deploy_url, headers=deploy_headers, data=json_data)
 
-    if r2.status_code == 200:
-        d2 = r2.json()
-        deployment_id = d2["deploymentId"]
+    if response.status_code == 200:
+        deployment_id = response.json().get("deploymentId")
         print(f"✅ DEPLOYMENT successfully started with ID: {deployment_id}")
         return deployment_id
-
     else:
         print("❌ Error starting cloud deployment")
-        print("- Status:", r2.status_code)
-        print("- Error:", r2.reason)
-        print("- Response:", r2.text)    
+        print("- Status:", response.status_code)
+        print("- Error:", response.reason)
+        print("- Response:", response.text)
         exit(1)
 
 
-# Call to the Cloud Platform API endpoint to check deployment status
 def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers):
-    stackspot_cloud_deployments_details_url = f"https://cloud-cloud-platform-api.prd.stackspot.com/v1/deployments/details/{deployment_id}"
+    status_url = f"https://cloud-cloud-platform-api.prd.stackspot.com/v1/deployments/details/{deployment_id}"
     application_portal_url = "https://cloud.prd.stackspot.com/applications"
-    
+
     i = 0
     while True:
         print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
-        
-        # Make the request to check the deployment status
-        r3 = requests.get(
-            url=stackspot_cloud_deployments_details_url, 
-            headers=deploy_headers
-        )
-        
-        if r3.status_code == 200:
-            d3 = r3.json()
-            deployment_status = d3.get("deploymentStatus")
-            
-            # Check if the deployment status is "UP"
+        response = requests.get(url=status_url, headers=deploy_headers)
+
+        if response.status_code == 200:
+            deployment_status = response.json().get("deploymentStatus")
             if deployment_status == "UP":
                 print(f'✅ Deployment concluded ({deployment_status}) for application "{application_name}" in runtime: "{runtime_name}".')
                 print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
-                break  # Exit the loop once the status is "UP"
+                break
             else:
-                i = i+1
-                print(f"⚙️ Current deployment status: {deployment_status}. Retrying in 5 seconds...")   
+                print(f"⚙️ Current deployment status: {deployment_status}. Retrying in 5 seconds...")
         else:
-            print("- Error getting deployment details")
-            print("- Status:", r3.status_code)
-            print("- Error:", r3.reason)
-            print("- Response:", r3.text)    
+            print("❌ Error getting deployment details")
+            print("- Status:", response.status_code)
+            print("- Error:", response.reason)
+            print("- Response:", response.text)
             exit(1)
-        
-        # Wait for 5 seconds before the next polling attempt
+
         time.sleep(5)
 
 
-# To use later to extract github url for logs
-def build_pipeline_url() -> str:
-    GITHUB_SERVER_URL = os.getenv("GITHUB_SERVER_URL")
-    GITHUB_REPOSITORY = os.getenv("GITHUB_REPOSITORY")
-    GITHUB_RUN_ID = os.getenv("GITHUB_RUN_ID")
-    if None in [GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID]:
-        print("- Some mandatory GitHub Action environment variable is empty.")
-        exit(1)
-    url = f"{GITHUB_SERVER_URL}/{GITHUB_REPOSITORY}/actions/runs/{GITHUB_RUN_ID}"
-    return url
-
-# MAIN EXECUTION
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
 CLIENT_REALM = os.getenv("CLIENT_REALM")
@@ -129,76 +96,36 @@ VERBOSE = os.getenv("VERBOSE")
 APPLICATION_FILE = os.getenv("APPLICATION_FILE")
 IMAGE_TAG = os.getenv("IMAGE_TAG")
 
-inputs_list = [CLIENT_ID, CLIENT_KEY, CLIENT_REALM]
-
-if None in inputs_list:
-    print("❌ Some credential is missing!")
+if not all([CLIENT_ID, CLIENT_KEY, CLIENT_REALM, APPLICATION_FILE]):
+    print("❌ Missing required environment variables!")
     exit(1)
 
-# Load the YAML content
 with open(Path(APPLICATION_FILE), 'r') as file:
-    yaml_data = file.read()
+    yaml_data = safe_load(file.read())
 
-yaml_data = safe_load(yaml_data)
-
-# Extract and check values from the YAML structure
-
-if IMAGE_TAG is None:
-        print("❌ Image Tag to deploy not informed.")
-        exit(1) 
 application_name = yaml_data['metadata']['name']
-if application_name is None:
-        print("❌ Application Name not informed or couldn't be extracted.")
-        exit(1) 
 application_id = yaml_data['metadata']['id']
-if application_id is None:
-        print("❌ Application ID not informed or couldn't be extracted.")
-        exit(1) 
 runtime_id = yaml_data['spec']['runtime']['id']
-if runtime_id is None:
-        print("❌ Runtime ID not informed or couldn't be extracted.")
-        exit(1) 
-runtime_name = yaml_data['spec']['runtime']['name']
-image_url = yaml_data['spec']['container']['imageUrl']
-if image_url is None:
-        print("❌ Image URL not informed or couldn't be extracted.")
-        exit(1) 
-container_port = yaml_data['spec']['container']['port']
-if container_port is None:
-        print("❌ Container Port not informed or couldn't be extracted.")
-        exit(1) 
-health_check_path = yaml_data['spec']['container']['healthCheckPath']
-if health_check_path is None:
-        print("❌ Health Check Path not informed or couldn't be extracted.")
-        exit(1) 
-env_vars = yaml_data['spec']['container']['envVars']
-secret_vars = yaml_data['spec']['container']['secretVars']
+runtime_name = yaml_data['spec']['runtime'].get('name', 'Default Runtime')
+image_url = yaml_data['spec']['imageUrl']
+container_port = yaml_data['spec']['containerPort']
+health_check_path = yaml_data['spec']['healthCheckPath']
+env_vars = yaml_data.get('spec', {}).get('envVars', [])
+secret_vars = yaml_data.get('spec', {}).get('secretVars', [])
 mem = yaml_data['spec']['runtime']['memory']
-if mem is None:
-        print("❌ Memory not informed or couldn't be extracted.")
-        exit(1) 
 cpu = yaml_data['spec']['runtime']['cpu']
-if cpu is None:
-        print("❌ CPU not informed or couldn't be extracted.")
-        exit(1) 
 replica_min = yaml_data['spec']['runtime']['replicaNum']['min']
-if replica_min is None:
-        print("❌ Replica MIN config not informed or couldn't be extracted.")
-        exit(1) 
 replica_max = yaml_data['spec']['runtime']['replicaNum']['max']
-if replica_max is None:
-        print("❌ Replica MAX config not informed or couldn't be extracted.")
-        exit(1) 
 
-if VERBOSE is not None:
-    print("🕵️ APPLICATION FILE:", yaml_data)
+if not IMAGE_TAG:
+    print("❌ Image Tag to deploy not informed.")
+    exit(1)
 
-# Create the DEPLOYMENT JSON structure
 data = {
     "applicationId": application_id,
     "applicationName": application_name,
     "action": "DEPLOY",
-    "containerPort": f"{container_port}",
+    "containerPort": container_port,
     "healthCheckPath": health_check_path,
     "envVars": env_vars,
     "secretVars": secret_vars,
@@ -213,13 +140,12 @@ data = {
     }
 }
 
-# Convert the dictionary to a JSON string
 json_data = json.dumps(data, indent=4)
 
-if VERBOSE is not None:
+if VERBOSE:
     print("🕵️ DEPLOYMENT REQUEST DATA:", json_data)
 
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
 deploy_headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-deployment_id = deployment(application_name, runtime_name, deploy_headers)
+deployment_id = deployment(application_name, runtime_name, deploy_headers, json_data)
 check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers)
