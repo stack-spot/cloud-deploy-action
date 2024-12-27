@@ -1,32 +1,21 @@
 apiVersion: v1
 kind: Application
-metadata:
-  id: 01JAB800C2S97BAZDF2PRDNQD2
-  name: cloud-apps-demo
-spec:
-  runtime:
-    id: 01J9C694269APB2TCNAG9CJYVC
-    name: Runtime 1
-    memory: 8
-    cpu: 8
-    replicaNum:
-      min: 2
-      max: 10
-  container:
-    imageUrl: 185072717495.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo
-    port: 5000
-    healthCheckPath: /healthz
-    envVars:
-      - key: ENV_VAR_DEMO1
-        value: env_value1
-      - key: ENV_VAR_DEMO2
-        value: env_value2
-      - key: ENV_VAR_DEMO3
-        value: env_value3
-    secretVars:
-      - key: SECRET_VAR_DEMO1
-        value: secret_value1
-      - key: SECRET_VAR_DEMO2
-        value: secret_value2
-      - key: SECRET_VAR_DEMO3
-        value: secret_value3
+runtimeId: 01J9C694269APB2TCNAG9CJYVC
+applicationId: 01JEYDJ7TPM8AXJBVHAQJTA552
+applicationName: cloud-apps-demo
+action: DEPLOY
+containerPort: 8080
+healthCheckPath: /healthz
+imageUrl: 185072717495.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo
+tag: latest
+mem: 8
+cpu: 8
+replicaNum:
+  min: 1
+  max: 3
+envVars:
+  - key: ENV_FROM_ACTION
+    value: value1
+secretVars:
+  - key: SECRET_FROM_ACTION
+    value: secret_value1

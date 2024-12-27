@@ -1,22 +1,21 @@
 apiVersion: v1
 kind: Application
-metadata:
-  id: 01JEYDJ7TPM8AXJBVHAQJTA552
-  name: rentals-api
-spec:
-  runtime:
-    id: 01J9C694269APB2TCNAG9CJYVC
-    memory: 8
-    cpu: 8
-    replicaNum:
-      min: 1
-      max: 3
-  containerPort: 8080
-  healthCheckPath: /healthz
-  imageUrl: 185072717495.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo
-  envVars:
-    - key: ENV_FROM_ACTION
-      value: value1
-  secretVars:
-    - key: SECRET_FROM_ACTION
-      value: secret_value1
+runtimeId: 01J9C694269APB2TCNAG9CJYVC
+applicationId: 01JEYDJ7TPM8AXJBVHAQJTA552
+applicationName: cloud-apps-demo
+action: DEPLOY
+containerPort: 8080
+healthCheckPath: /healthz
+imageUrl: 185072717495.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo
+tag: latest
+mem: 8
+cpu: 8
+replicaNum:
+  min: 1
+  max: 3
+envVars:
+  - key: ENV_FROM_ACTION
+    value: value1
+secretVars:
+  - key: SECRET_FROM_ACTION
+    value: secret_value1
