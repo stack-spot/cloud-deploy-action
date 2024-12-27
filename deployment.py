@@ -105,9 +105,26 @@ cpu = yaml_data.get('cpu')
 replica_min = yaml_data.get('replicaNum', {}).get('min')
 replica_max = yaml_data.get('replicaNum', {}).get('max')
 
-# Validate required fields
-if not all([application_name, application_id, runtime_id, image_url, container_port, health_check_path, mem, cpu, replica_min, replica_max]):
-    print("❌ Missing required fields in the YAML/JSON file!")
+required_fields = {
+    "application_name": application_name,
+    "application_id": application_id,
+    "runtime_id": runtime_id,
+    "image_url": image_url,
+    "container_port": container_port,
+    "health_check_path": health_check_path,
+    "mem": mem,
+    "cpu": cpu,
+    "replica_min": replica_min,
+    "replica_max": replica_max,
+}
+
+# Verificar quais campos estão faltando
+missing_fields = [field for field, value in required_fields.items() if not value]
+
+if missing_fields:
+    print("❌ Missing required fields in the YAML/JSON file:")
+    for field in missing_fields:
+        print(f"- {field}")
     exit(1)
 
 if not IMAGE_TAG:
