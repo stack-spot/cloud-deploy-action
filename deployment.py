@@ -6,7 +6,6 @@ from ruamel.yaml import YAML
 from pathlib import Path
 from io import StringIO
 
-
 def yaml() -> YAML:
     yml = YAML()
     yml.indent(mapping=2, sequence=4, offset=2)
@@ -15,11 +14,9 @@ def yaml() -> YAML:
     yml.preserve_quotes = True
     return yml
 
-
 def safe_load(content: str) -> dict:
     yml = yaml()
     return yml.load(StringIO(content))
-
 
 def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
     iam_url = f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"
@@ -29,10 +26,8 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
         "grant_type": "client_credentials",
         "client_secret": CLIENT_KEY
     }
-
     print("⚙️ Authenticating...")
     response = requests.post(url=iam_url, headers=iam_headers, data=iam_data)
-
     if response.status_code == 200:
         access_token = response.json().get("access_token")
         print("✅ Successfully authenticated!")
@@ -44,12 +39,10 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
         print("- Response:", response.text)
         exit(1)
 
-
-def deployment(application_name, runtime_name, deploy_headers, json_data):
-    print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_name}".')
+def deployment(application_name, runtime_id, deploy_headers, json_data):
+    print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_id}".')
     deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
     response = requests.post(url=deploy_url, headers=deploy_headers, data=json_data)
-
     if response.status_code == 200:
         deployment_id = response.json().get("deploymentId")
         print(f"✅ DEPLOYMENT successfully started with ID: {deployment_id}")
@@ -61,20 +54,17 @@ def deployment(application_name, runtime_name, deploy_headers, json_data):
         print("- Response:", response.text)
         exit(1)
 
-
-def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers):
+def check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers):
     status_url = f"https://cloud-cloud-platform-api.prd.stackspot.com/v1/deployments/details/{deployment_id}"
     application_portal_url = "https://cloud.prd.stackspot.com/applications"
-
     i = 0
     while True:
-        print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
+        print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_id}" ({i}).')
         response = requests.get(url=status_url, headers=deploy_headers)
-
         if response.status_code == 200:
             deployment_status = response.json().get("deploymentStatus")
             if deployment_status == "UP":
-                print(f'✅ Deployment concluded ({deployment_status}) for application "{application_name}" in runtime: "{runtime_name}".')
+                print(f'✅ Deployment concluded ({deployment_status}) for application "{application_name}" in runtime: "{runtime_id}".')
                 print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
                 break
             else:
@@ -85,9 +75,7 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
             print("- Error:", response.reason)
             print("- Response:", response.text)
             exit(1)
-
         time.sleep(5)
-
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
@@ -103,19 +91,24 @@ if not all([CLIENT_ID, CLIENT_KEY, CLIENT_REALM, APPLICATION_FILE]):
 with open(Path(APPLICATION_FILE), 'r') as file:
     yaml_data = safe_load(file.read())
 
-application_name = yaml_data['metadata']['name']
-application_id = yaml_data['metadata']['id']
-runtime_id = yaml_data['spec']['runtime']['id']
-runtime_name = yaml_data['spec']['runtime'].get('name', 'Default Runtime')
-image_url = yaml_data['spec']['imageUrl']
-container_port = yaml_data['spec']['containerPort']
-health_check_path = yaml_data['spec']['healthCheckPath']
-env_vars = yaml_data.get('spec', {}).get('envVars', [])
-secret_vars = yaml_data.get('spec', {}).get('secretVars', [])
-mem = yaml_data['spec']['runtime']['memory']
-cpu = yaml_data['spec']['runtime']['cpu']
-replica_min = yaml_data['spec']['runtime']['replicaNum']['min']
-replica_max = yaml_data['spec']['runtime']['replicaNum']['max']
+# Extract values directly from the top-level structure
+application_name = yaml_data.get('applicationName')
+application_id = yaml_data.get('applicationId')
+runtime_id = yaml_data.get('runtimeId')
+image_url = yaml_data.get('imageUrl')
+container_port = yaml_data.get('containerPort')
+health_check_path = yaml_data.get('healthCheckPath')
+env_vars = yaml_data.get('envVars', [])
+secret_vars = yaml_data.get('secretVars', [])
+mem = yaml_data.get('mem')
+cpu = yaml_data.get('cpu')
+replica_min = yaml_data.get('replicaNum', {}).get('min')
+replica_max = yaml_data.get('replicaNum', {}).get('max')
+
+# Validate required fields
+if not all([application_name, application_id, runtime_id, image_url, container_port, health_check_path, mem, cpu, replica_min, replica_max]):
+    print("❌ Missing required fields in the YAML/JSON file!")
+    exit(1)
 
 if not IMAGE_TAG:
     print("❌ Image Tag to deploy not informed.")
@@ -141,11 +134,10 @@ data = {
 }
 
 json_data = json.dumps(data, indent=4)
-
 if VERBOSE:
     print("🕵️ DEPLOYMENT REQUEST DATA:", json_data)
 
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
 deploy_headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-deployment_id = deployment(application_name, runtime_name, deploy_headers, json_data)
-check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers)
+deployment_id = deployment(application_name, runtime_id, deploy_headers, json_data)
+check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers)
