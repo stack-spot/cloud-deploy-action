@@ -91,6 +91,8 @@ if not all([CLIENT_ID, CLIENT_KEY, CLIENT_REALM, APPLICATION_FILE]):
 with open(Path(APPLICATION_FILE), 'r') as file:
     yaml_data = safe_load(file.read())
 
+print(yaml_data)
+
 # Extract values directly from the top-level structure
 application_name = yaml_data.get('applicationName')
 application_id = yaml_data.get('applicationId')
