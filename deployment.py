@@ -158,7 +158,7 @@ data = {
     "replicaNum": {
         "min": replica_min,
         "max": replica_max,
-    }
+    },
     "applicationURL": "teste",
     "health": "DOWN"
 }
