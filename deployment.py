@@ -41,7 +41,7 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
 
 def deployment(application_name, runtime_id, deploy_headers, json_data):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_id}".')
-    deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
+    deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v2/deployments"
     headers = {
         "Authorization": deploy_headers["Authorization"],
         "Content-Type": "application/json",
@@ -62,7 +62,7 @@ def deployment(application_name, runtime_id, deploy_headers, json_data):
         exit(1)
 
 def check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers):
-    status_url = f"https://cloud-cloud-platform-api.prd.stackspot.com/v1/deployments/details/{deployment_id}"
+    status_url = f"https://cloud-cloud-platform-api.prd.stackspot.com/v2/deployments/details/{deployment_id}"
     application_portal_url = "https://cloud.prd.stackspot.com/applications"
     i = 0
     while True:
