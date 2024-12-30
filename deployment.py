@@ -43,7 +43,9 @@ def deployment(application_name, runtime_id, deploy_headers, json_data):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_id}".')
     deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
     headers = {
-        "Authorization": deploy_headers["Authorization"]
+        "Authorization": deploy_headers["Authorization"],
+         "Content-Type': 'application/json",
+         "Accept': 'application/json"
     }
     print("Headers being sent:", headers)  # Debug line
     print("JSON data being sent:", json_data)
