@@ -41,7 +41,7 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
 
 def deployment(application_name, runtime_id, deploy_headers, json_data):
     print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_id}".')
-    deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v1/deployments"
+    deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v2/deployments"
     headers = {
         "Authorization": deploy_headers["Authorization"],
         "Content-Type": "application/json",
