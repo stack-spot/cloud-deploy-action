@@ -62,7 +62,7 @@ def deployment(application_name, runtime_id, deploy_headers, json_data):
         exit(1)
 
 def check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers):
-    status_url = f"https://cloud-cloud-platform-api.prd.stackspot.com/v1/deployments/details/{deployment_id}"
+    status_url = f"https://cloud-cloud-platform-api.prd.stackspot.com/v2/deployments/details/{deployment_id}"
     application_portal_url = "https://cloud.prd.stackspot.com/applications"
     i = 0
     while True:
