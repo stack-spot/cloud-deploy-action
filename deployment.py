@@ -169,5 +169,5 @@ if VERBOSE:
 # Execute deployment
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
 deploy_headers = {"Authorization": f"Bearer {access_token}"}
-deployment_id = deployment("app-demo", runtime_id, deploy_headers, data)
+deployment_id = deployment(application_name, runtime_id, deploy_headers, data)
 check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers)
