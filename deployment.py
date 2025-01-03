@@ -19,36 +19,26 @@ def safe_load(content: str) -> dict:
    return yml.load(StringIO(content))
 
 def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
-    if CLIENT_REALM == "stackspot":
-        iam_url = "https://idm.stackspot.com/stackspot/oidc/oauth/token"
-    elif CLIENT_REALM == "stackspot-dev":
-        iam_url = "https://iam-auth-ssr.dev.stackspot.com/stackspot-dev/oidc/oauth/token"
-    elif CLIENT_REALM == "stackspot-stg":
-        iam_url = "https://iam-auth-ssr.stg.stackspot.com/stackspot-stg/oidc/oauth/token"
-    else:
-        print("❌ Invalid realm")
-        exit(1)
-
-    iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    iam_data = {
-        "client_id": CLIENT_ID,
-        "grant_type": "client_credentials",
-        "client_secret": CLIENT_KEY
-    }
-
-    print("⚙️ Authenticating...")
-    response = requests.post(url=iam_url, headers=iam_headers, data=iam_data)
-
-    if response.status_code == 200:
-        access_token = response.json().get("access_token")
-        print("✅ Successfully authenticated!")
-        return access_token
-    else:
-        print("❌ Error during IAM authentication")
-        print("- Status:", response.status_code)
-        print("- Error:", response.reason)
-        print("- Response:", response.text)
-        exit(1)
+   #iam_url = f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"
+   iam_url = f"https://iam-auth-ssr.dev.stackspot.com/stackspot-dev/oidc/oauth/token"
+   iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+   iam_data = {
+       "client_id": CLIENT_ID,
+       "grant_type": "client_credentials",
+       "client_secret": CLIENT_KEY
+   }
+   print("⚙️ Authenticating...")
+   response = requests.post(url=iam_url, headers=iam_headers, data=iam_data)
+   if response.status_code == 200:
+       access_token = response.json().get("access_token")
+       print("✅ Successfully authenticated!")
+       return access_token
+   else:
+       print("❌ Error during IAM authentication")
+       print("- Status:", response.status_code)
+       print("- Error:", response.reason)
+       print("- Response:", response.text)
+       exit(1)
 
 def deployment(application_name, runtime_id, deploy_headers, data):
    print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_id}".')
