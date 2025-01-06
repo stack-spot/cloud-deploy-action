@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Application
 runtimeId: 01J9C694269APB2TCNAG9CJYVC
-applicationId: 01JEYDJ7TPM8AXJBVHAQJTA552
+applicationId: 01JAFW10F5VD3JY0254HWP0M4T
 applicationName: cloud-apps-demo
 action: DEPLOY
 containerPort: 8080

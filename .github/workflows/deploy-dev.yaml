@@ -19,17 +19,17 @@ jobs:
     
     deploy:
         needs: [build]
-        runs-on: lite-runners-dev
+        runs-on: engineering-runners-dev
         steps:
             - name: Checkout repo
               uses: actions/checkout@v4.2.1
             - name: Deploy repo application
-              uses: stack-spot/cloud-deploy-action@stg
+              uses: stack-spot/cloud-deploy-action@dev
               id: deploy
               with:
-                CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
-                CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
-                CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
-                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-stg.yaml
+                CLIENT_REALM: stackspot-dev
+                CLIENT_ID: d317c135-717a-46cf-b9ae-c39fa10aaa9d
+                CLIENT_KEY: aPOMtld9yYZwhW18Id4nU90m57pVKcU9zNZgMM9i63pcm6aFRh616jq9F0BV4ux1
+                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-dev.yaml
                 IMAGE_TAG: ${{needs.build.outputs.tag}}
                 VERBOSE: true
