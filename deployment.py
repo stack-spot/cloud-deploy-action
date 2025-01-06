@@ -18,6 +18,26 @@ def safe_load(content: str) -> dict:
    yml = yaml()
    return yml.load(StringIO(content))
 
+def get_environment_urls(CLIENT_REALM):
+    if CLIENT_REALM == "stackspot-dev":
+        return {
+            "auth": "https://iam-auth-ssr.dev.stackspot.com/stackspot-dev/oidc/oauth/token",
+            "deploy": "https://cloud-cloud-runtime-api.dev.stackspot.com/v2/deployments"
+        }
+    elif CLIENT_REALM == "stackspot-stg":
+        return {
+            "auth": "https://iam-auth-ssr.stg.stackspot.com/stackspot-stg/oidc/oauth/token",
+            "deploy": "https://cloud-cloud-runtime-api.stg.stackspot.com/v2/deployments"
+        }
+    elif CLIENT_REALM == "stackspot":
+        return {
+            "auth": f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
+            "deploy": "https://cloud-cloud-runtime-api.prd.stackspot.com/v2/deployments"
+        }
+    else:
+        print(f"❌ Invalid CLIENT_REALM: {CLIENT_REALM}")
+        exit(1)
+
 def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
    #iam_url = f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"
    iam_url = f"https://iam-auth-ssr.dev.stackspot.com/stackspot-dev/oidc/oauth/token"
@@ -40,51 +60,41 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
        print("- Response:", response.text)
        exit(1)
 
-def deployment(application_name, runtime_id, deploy_headers, data):
-   print(f'⚙️ Deploying application "{application_name}" in runtime: "{runtime_id}".')
-   deploy_url = "https://cloud-cloud-runtime-api.prd.stackspot.com/v2/deployments"
-   headers = {
-       "Authorization": deploy_headers["Authorization"],
-       "Content-Type": "application/json",
-       "Accept": "application/json"
-   }
-   print("Headers being sent:", headers)
-   print("JSON data being sent:", data)
-   response = requests.post(url=deploy_url, headers=headers, json=data)
-   if response.status_code == 200:
-       deployment_id = response.json().get("deploymentId")
-       print(f"✅ DEPLOYMENT successfully started with ID: {deployment_id}")
-       return deployment_id
-   else:
-       print("❌ Error starting cloud deployment")
-       print("- Status:", response.status_code)
-       print("- Error:", response.reason)
-       print("- Response:", response.text)
-       exit(1)
+def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
+    urls = get_environment_urls(CLIENT_REALM)
+    iam_url = urls["auth"]
+    iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    iam_data = {
+        "client_id": CLIENT_ID,
+        "grant_type": "client_credentials",
+        "client_secret": CLIENT_KEY
+    }
+    print(f"⚙️ Authenticating in {CLIENT_REALM}...")
+    response = requests.post(url=iam_url, headers=iam_headers, data=iam_data)
+    if response.status_code == 200:
+        return response.json().get("access_token")
+    print("❌ Authentication error")
+    print(f"Status: {response.status_code}, Error: {response.text}")
+    exit(1)
 
-def check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers):
-   status_url = f"https://cloud-cloud-platform-api.prd.stackspot.com/v2/deployments/details/{deployment_id}"
-   application_portal_url = "https://cloud.prd.stackspot.com/applications"
-   i = 0
-   while True:
-       print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_id}" ({i}).')
-       response = requests.get(url=status_url, headers=deploy_headers)
-       if response.status_code == 200:
-           deployment_status = response.json().get("deploymentStatus")
-           if deployment_status == "UP":
-               print(f'✅ Deployment concluded ({deployment_status}) for application "{application_name}" in runtime: "{runtime_id}".')
-               print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
-               break
-           else:
-               print(f"⚙️ Current deployment status: {deployment_status}. Retrying in 5 seconds...")
-       else:
-           print("❌ Error getting deployment details")
-           print("- Status:", response.status_code)
-           print("- Error:", response.reason)
-           print("- Response:", response.text)
-           exit(1)
-       time.sleep(5)
-       i += 1
+def deployment(application_name, runtime_id, deploy_headers, data, CLIENT_REALM):
+    urls = get_environment_urls(CLIENT_REALM)
+    deploy_url = urls["deploy"]
+    print(f'⚙️ Deploying "{application_name}" to {CLIENT_REALM}')
+    response = requests.post(
+        url=deploy_url,
+        headers={
+            "Authorization": deploy_headers["Authorization"],
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        json=data
+    )
+    if response.status_code == 200:
+        return response.json().get("deploymentId")
+    print("❌ Deployment error")
+    print(f"Status: {response.status_code}, Error: {response.text}")
+    exit(1)
 
 # Environment variables
 CLIENT_ID = os.getenv("CLIENT_ID")
@@ -170,5 +180,5 @@ if VERBOSE:
 # Execute deployment
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
 deploy_headers = {"Authorization": f"Bearer {access_token}"}
-deployment_id = deployment(application_name, runtime_id, deploy_headers, data)
+deployment_id = deployment(application_name, runtime_id, deploy_headers, data, CLIENT_REALM)
 #check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers)
