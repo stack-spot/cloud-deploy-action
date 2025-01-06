@@ -38,27 +38,6 @@ def get_environment_urls(CLIENT_REALM):
         print(f"❌ Invalid CLIENT_REALM: {CLIENT_REALM}")
         exit(1)
 
-def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
-   #iam_url = f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token"
-   iam_url = f"https://iam-auth-ssr.dev.stackspot.com/stackspot-dev/oidc/oauth/token"
-   iam_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-   iam_data = {
-       "client_id": CLIENT_ID,
-       "grant_type": "client_credentials",
-       "client_secret": CLIENT_KEY
-   }
-   print("⚙️ Authenticating...")
-   response = requests.post(url=iam_url, headers=iam_headers, data=iam_data)
-   if response.status_code == 200:
-       access_token = response.json().get("access_token")
-       print("✅ Successfully authenticated!")
-       return access_token
-   else:
-       print("❌ Error during IAM authentication")
-       print("- Status:", response.status_code)
-       print("- Error:", response.reason)
-       print("- Response:", response.text)
-       exit(1)
 
 def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
     urls = get_environment_urls(CLIENT_REALM)
