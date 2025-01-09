@@ -65,9 +65,9 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
     while True:
         print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
 
-        # Make the request to check the deployment status
+        # Make the request to check the deployment status - CORRECTED URL
         r3 = requests.get(
-            url="{stackspot_cloud_deployments_details_url}/{deployment_id}/status",
+            url=f"{stackspot_cloud_deployments_details_url}/{deployment_id}/status",  # Fixed string formatting
             headers=deploy_headers
         )
 
@@ -75,11 +75,10 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
             d3 = r3.json()
             deployment_status = d3.get("status")
 
-            # Check if the deployment status is "UP"
             if deployment_status == "UP":
                 print(f'✅ Deployment concluded ({deployment_status}) for application "{application_name}" in runtime: "{runtime_name}".')
                 print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
-                break  # Exit the loop once the status is "UP"
+                break
             else:
                 i = i+1
                 print(f"⚙️ Current deployment status: {deployment_status}. Retrying in 5 seconds...")
@@ -90,27 +89,7 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
             print("- Response:", r3.text)
             exit(1)
 
-        # Wait for 5 seconds before the next polling attempt
         time.sleep(5)
-
-def deployment(application_name, runtime_id, deploy_headers, data, CLIENT_REALM):
-    urls = get_environment_urls(CLIENT_REALM)
-    deploy_url = urls["deploy"]
-    print(f'⚙️ Deploying "{application_name}" to {CLIENT_REALM}')
-    response = requests.post(
-        url=deploy_url,
-        headers={
-            "Authorization": deploy_headers["Authorization"],
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        json=data
-    )
-    if response.status_code == 200:
-        return response.json().get("deploymentId")
-    print("❌ Deployment error")
-    print(f"Status: {response.status_code}, Error: {response.text}")
-    exit(1)
 
 # Environment variables
 CLIENT_ID = os.getenv("CLIENT_ID")
