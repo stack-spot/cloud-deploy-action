@@ -105,7 +105,7 @@ def deployment(application_name, runtime_id, deploy_headers, data, CLIENT_REALM)
         json=data
     )
     if response.status_code == 200:
-        return response.json().get("deploymentId")
+        return response.json().get("id")
     print("❌ Deployment error")
     print(f"Status: {response.status_code}, Error: {response.text}")
     exit(1)
