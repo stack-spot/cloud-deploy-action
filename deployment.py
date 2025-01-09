@@ -56,6 +56,43 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
     print(f"Status: {response.status_code}, Error: {response.text}")
     exit(1)
 
+def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers):
+    urls = get_environment_urls(CLIENT_REALM)
+    stackspot_cloud_deployments_details_url = urls["deploy"]
+    application_portal_url = "https://cloud.prd.stackspot.com/applications"
+
+    i = 0
+    while True:
+        print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
+
+        # Make the request to check the deployment status
+        r3 = requests.get(
+            url="{stackspot_cloud_deployments_details_url}/{deployment_id}/status",
+            headers=deploy_headers
+        )
+
+        if r3.status_code == 200:
+            d3 = r3.json()
+            deployment_status = d3.get("status")
+
+            # Check if the deployment status is "UP"
+            if deployment_status == "UP":
+                print(f'✅ Deployment concluded ({deployment_status}) for application "{application_name}" in runtime: "{runtime_name}".')
+                print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
+                break  # Exit the loop once the status is "UP"
+            else:
+                i = i+1
+                print(f"⚙️ Current deployment status: {deployment_status}. Retrying in 5 seconds...")
+        else:
+            print("- Error getting deployment details")
+            print("- Status:", r3.status_code)
+            print("- Error:", r3.reason)
+            print("- Response:", r3.text)
+            exit(1)
+
+        # Wait for 5 seconds before the next polling attempt
+        time.sleep(5)
+
 def deployment(application_name, runtime_id, deploy_headers, data, CLIENT_REALM):
     urls = get_environment_urls(CLIENT_REALM)
     deploy_url = urls["deploy"]
@@ -160,4 +197,4 @@ if VERBOSE:
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
 deploy_headers = {"Authorization": f"Bearer {access_token}"}
 deployment_id = deployment(application_name, runtime_id, deploy_headers, data, CLIENT_REALM)
-#check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers)
+check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers)
