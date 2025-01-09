@@ -91,6 +91,25 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
 
         time.sleep(5)
 
+def deployment(application_name, runtime_id, deploy_headers, data, CLIENT_REALM):
+    urls = get_environment_urls(CLIENT_REALM)
+    deploy_url = urls["deploy"]
+    print(f'⚙️ Deploying "{application_name}" to {CLIENT_REALM}')
+    response = requests.post(
+        url=deploy_url,
+        headers={
+            "Authorization": deploy_headers["Authorization"],
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        json=data
+    )
+    if response.status_code == 200:
+        return response.json().get("deploymentId")
+    print("❌ Deployment error")
+    print(f"Status: {response.status_code}, Error: {response.text}")
+    exit(1)
+
 # Environment variables
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
