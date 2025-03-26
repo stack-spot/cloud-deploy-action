@@ -21,18 +21,19 @@ def safe_load(content: str) -> dict:
 def get_environment_urls(CLIENT_REALM):
     if CLIENT_REALM == "stackspot-dev":
         return {
-            "auth": "https://iam-auth-ssr.dev.stackspot.com/stackspot-dev/oidc/oauth/token",
-            "deploy": "https://cloud-cloud-runtime-api.dev.stackspot.com/v2/deployments"
+            "auth": f"https://iam-auth-ssr.dev.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
+            "deploy": "https://cloud-cloud-platform-horizon.dev.stackspot.com/v1/applications/deployments"
         }
     elif CLIENT_REALM == "stackspot-stg":
         return {
-            "auth": "https://iam-auth-ssr.stg.stackspot.com/stackspot-stg/oidc/oauth/token",
-            "deploy": "https://cloud-cloud-runtime-api.stg.stackspot.com/v2/deployments"
+            "auth": f"https://iam-auth-ssr.stg.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
+            "deploy": "https://cloud-cloud-platform-horizon.stg.stackspot.com/v1/applications/deployments"
         }
     elif CLIENT_REALM == "stackspot":
         return {
             "auth": f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
-            "deploy": "https://cloud-cloud-runtime-api.prd.stackspot.com/v2/deployments"
+            "deploy": "https://cloud-platform-horizon.stackspot.com/v1/applications/deployments"
+            # https://cloud-cloud-platform-horizon.prd.stackspot.com/v1/applications/deployments"
         }
     else:
         print(f"❌ Invalid CLIENT_REALM: {CLIENT_REALM}")
@@ -128,68 +129,62 @@ with open(Path(APPLICATION_FILE), 'r') as file:
 print(yaml_data)
 
 # Extract data from YAML
-application_name = yaml_data.get('applicationName')
-application_id = yaml_data.get('applicationId')
-runtime_id = yaml_data.get('runtimeId')
-image_url = yaml_data.get('imageUrl')
-container_port = yaml_data.get('containerPort')
-health_check_path = yaml_data.get('healthCheckPath')
-env_vars = yaml_data.get('envVars', [])
-secret_vars = yaml_data.get('secretVars', [])
-mem = yaml_data.get('mem')
-cpu = yaml_data.get('cpu')
-replica_min = yaml_data.get('replicaNum', {}).get('min')
-replica_max = yaml_data.get('replicaNum', {}).get('max')
+metadata = yaml_data.get('metadata', {})
+spec = yaml_data.get('spec', {})
+
+application_name = metadata.get('name')
+application_id = metadata.get('id', metadata.get('stackspot', {}).get('applicationId'))
+app_version = metadata.get('appVersion')
+tags = metadata.get('tags', [])
+labels = metadata.get('labels', [])
+runtime_id = spec.get('runtimeId')
+deploy_template = spec.get('deployTemplate')
+deploy_template_values = spec.get('deployTemplateValues', {})
 
 required_fields = {
-   "application_name": application_name,
-   "application_id": application_id,
-   "runtime_id": runtime_id,
-   "image_url": image_url,
-   "container_port": container_port,
-   "health_check_path": health_check_path,
-   "mem": mem,
-   "cpu": cpu,
-   "replica_min": replica_min,
-   "replica_max": replica_max,
+    "application_name": application_name,
+    "application_id": application_id,
+    "app_version": app_version,
+    "runtime_id": runtime_id,
+    "deploy_template": deploy_template,
 }
 
 missing_fields = [field for field, value in required_fields.items() if not value]
 
 if missing_fields:
-   print("❌ Missing required fields in the YAML/JSON file:")
-   for field in missing_fields:
-       print(f"- {field}")
-   exit(1)
+    print("❌ Missing required fields in the YAML file:")
+    for field in missing_fields:
+        print(f"- {field}")
+    exit(1)
 
 if not IMAGE_TAG:
-   print("❌ Image Tag to deploy not informed.")
-   exit(1)
+    print("❌ Image Tag to deploy not informed.")
+    exit(1)
+
+# Update the image tag in deployTemplateValues
+if 'image' in deploy_template_values:
+    deploy_template_values['image']['tag'] = IMAGE_TAG
 
 # Prepare deployment data
 data = {
-   "applicationId": application_id,
-   "applicationName": application_name,
-   "action": "DEPLOY",
-   "containerPort": container_port,
-   "healthCheckPath": health_check_path,
-   "envVars": env_vars,
-   "secretVars": secret_vars,
-   "imageUrl": image_url,
-   "tag": IMAGE_TAG,
-   "runtimeId": runtime_id,
-   "mem": mem,
-   "cpu": cpu,
-   "replicaNum": {
-       "min": replica_min,
-       "max": replica_max,
-   },
-   "applicationURL": "teste",
-   "health": "DOWN"
+    "apiVersion": yaml_data.get('apiVersion'),
+    "kind": yaml_data.get('kind'),
+    "metadata": {
+        "id": application_id,
+        "name": application_name,
+        "appVersion": app_version,
+        "tags": tags,
+        "labels": labels,
+    },
+    "spec": {
+        "deployTemplate": deploy_template,
+        "runtimeId": runtime_id,
+        "deployTemplateValues": deploy_template_values,
+    }
 }
 
 if VERBOSE:
-   print("🕵️ DEPLOYMENT REQUEST DATA:", data)
+    print("🕵️ DEPLOYMENT REQUEST DATA:", json.dumps(data, indent=2))
 
 # Execute deployment
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
