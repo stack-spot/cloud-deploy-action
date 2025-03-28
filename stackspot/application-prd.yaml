@@ -2,7 +2,7 @@ apiVersion: platform.cloud.stackspot.com/v1alpha1
 kind: ApplicationDeployment
 metadata:
   appVersion: 1.0.0
-  name: app-demo
+  name: app-demo-prd
   tags:
     - name: stk-tenant-test
       value: stk-tenant-test
@@ -10,14 +10,14 @@ metadata:
     - name: tenant-label
       value: stk-tenant-test
   stackspot:
-    applicationId: 01JAFW10F5VD3JY0254HWP0M4T 
+    applicationId: 01JAFW10F5VD3JY0254HWP0M4T
     workspaceId: 01JAFW10F5VD3JY0254HWP0M4T
 spec:
-  runtimeId: 01J9C694269APB2TCNAG9CJYVC
+  runtimeId: 01JQC2Y5M984NH9T13HZN9M4FZ
   deployTemplate: "default_stackspot_application:v1"
   deployTemplateValues:
     image:
-      repository: "185072717495.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo"
+      repository: "742799255367.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo"
       tag: latest    
     service:
       port: 80

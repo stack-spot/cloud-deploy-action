@@ -10,10 +10,10 @@ metadata:
     - name: tenant-label
       value: stk-tenant-test
   stackspot:
-    applicationId: 01JAFW10F5VD3JY0254HWP0M4T 
+    applicationId: 01JAFW10F5VD3JY0254HWP0M4T
     workspaceId: 01JAFW10F5VD3JY0254HWP0M4T
 spec:
-  runtimeId: 01J9C694269APB2TCNAG9CJYVC
+  runtimeId: 01JQA7AYKT86J6NFB1A6AF747T
   deployTemplate: "default_stackspot_application:v1"
   deployTemplateValues:
     image:
