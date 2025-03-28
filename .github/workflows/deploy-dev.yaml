@@ -27,9 +27,9 @@ jobs:
               uses: stack-spot/cloud-deploy-action@dev
               id: deploy
               with:
-                CLIENT_REALM: stackspot-dev
-                CLIENT_ID: d317c135-717a-46cf-b9ae-c39fa10aaa9d
-                CLIENT_KEY: aPOMtld9yYZwhW18Id4nU90m57pVKcU9zNZgMM9i63pcm6aFRh616jq9F0BV4ux1
+                CLIENT_REALM: ${{ secrets.CLIENT_REALM_DEV }}
+                CLIENT_ID: ${{ secrets.CLIENT_ID_DEV }}
+                CLIENT_KEY: ${{ secrets.CLIENT_KEY_DEV }}
                 APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-dev.yaml
                 IMAGE_TAG: ${{needs.build.outputs.tag}}
                 VERBOSE: true
