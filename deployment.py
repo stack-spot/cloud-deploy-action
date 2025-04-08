@@ -109,13 +109,6 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
             pods = data.get("status", {}).get("pods", [])
             health_statuses = [pod.get("healthStatus") for pod in pods]
 
-            if not health_statuses:
-                if i == 5:
-                    print("❌ No pods found in the deployment status response.")
-                    exit(1)
-                else:
-                    print(f"⚙️  Deployment is still in progress. Retrying in 5 seconds...")
-
             # Evaluate deployment status based on pod health statuses
             if any(status == "Healthy" for status in health_statuses):
                 print(f'✅ Deployment concluded (Healthy) for application "{application_name}" in runtime: "{runtime_name}".')

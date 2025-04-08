@@ -2,7 +2,7 @@ apiVersion: platform.cloud.stackspot.com/v1alpha2
 kind: ApplicationDeployment
 metadata:
   version: 1.0.0
-  name: app-demo-gui-6
+  name: app-demo-gui-7
 spec:
   applicationId: 01JQA7AYKT86J6NFB1A6AF7GUI
   runtimeId: 01JRBNTDAT318ENRE59SWDBRRV
