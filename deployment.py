@@ -48,10 +48,10 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
         "grant_type": "client_credentials",
         "client_secret": CLIENT_KEY
     }
-    print(f"⚙️ Authenticating in {CLIENT_REALM}...")
+    print(f"⚙️  Authenticating in {CLIENT_REALM}...")
     response = requests.post(url=iam_url, headers=iam_headers, data=iam_data)
     if response.status_code == 200:
-        print("✅ Authentication successful")
+        print("✅  Authentication successful")
         return response.json().get("access_token")
     print("❌  Authentication error")
     print(f"Status: {response.status_code}, Error: {response.text}")
@@ -64,7 +64,7 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
 
     i = 0
     while True:
-        print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
+        print(f'⚙️  Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
 
         response = requests.get(
             url=f"{stackspot_cloud_deployments_details_url}/{deployment_id}/health",
