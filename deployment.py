@@ -21,22 +21,19 @@ def safe_load(content: str) -> dict:
 def get_environment_urls(CLIENT_REALM):
     if CLIENT_REALM == "stackspot-dev":
         return {
-            "auth": f"https://iam-auth-ssr.dev.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
+            "auth": f"https://iam-auth-ssr.dev.stackspot.com/stackspot-dev/oidc/oauth/token",
             "deploy": "https://cloud-platform-horizon.dev.stackspot.com/v1/applications/deployments" # INTERNAL
         }
     elif CLIENT_REALM == "stackspot-stg":
         return {
-            "auth": f"https://iam-auth-ssr.stg.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
+            "auth": f"https://iam-auth-ssr.stg.stackspot.com/stackspot-dev/oidc/oauth/token",
             "deploy": "https://cloud-platform-horizon.stg.stackspot.com/v1/applications/deployments" # INTERNAL
         }
-    elif CLIENT_REALM == "stackspot":
+    else:
         return {
             "auth": f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
             "deploy": "https://cloud-platform-horizon.stackspot.com/v1/applications/deployments"
         }
-    else:
-        print(f"❌  Invalid CLIENT_REALM: {CLIENT_REALM}")
-        exit(1)
 
 
 def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
