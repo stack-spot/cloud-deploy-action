@@ -22,21 +22,20 @@ def get_environment_urls(CLIENT_REALM):
     if CLIENT_REALM == "stackspot-dev":
         return {
             "auth": f"https://iam-auth-ssr.dev.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
-            "deploy": "https://cloud-cloud-platform-horizon.dev.stackspot.com/v1/applications/deployments"
+            "deploy": "https://cloud-platform-horizon.dev.stackspot.com/v1/applications/deployments" # INTERNAL
         }
     elif CLIENT_REALM == "stackspot-stg":
         return {
             "auth": f"https://iam-auth-ssr.stg.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
-            "deploy": "https://cloud-cloud-platform-horizon.stg.stackspot.com/v1/applications/deployments"
+            "deploy": "https://cloud-platform-horizon.stg.stackspot.com/v1/applications/deployments" # INTERNAL
         }
     elif CLIENT_REALM == "stackspot":
         return {
             "auth": f"https://idm.stackspot.com/{CLIENT_REALM}/oidc/oauth/token",
             "deploy": "https://cloud-platform-horizon.stackspot.com/v1/applications/deployments"
-            # https://cloud-cloud-platform-horizon.prd.stackspot.com/v1/applications/deployments"
         }
     else:
-        print(f"❌ Invalid CLIENT_REALM: {CLIENT_REALM}")
+        print(f"❌  Invalid CLIENT_REALM: {CLIENT_REALM}")
         exit(1)
 
 
@@ -52,64 +51,98 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
     print(f"⚙️ Authenticating in {CLIENT_REALM}...")
     response = requests.post(url=iam_url, headers=iam_headers, data=iam_data)
     if response.status_code == 200:
+        print("✅ Authentication successful")
         return response.json().get("access_token")
-    print("❌ Authentication error")
+    print("❌  Authentication error")
     print(f"Status: {response.status_code}, Error: {response.text}")
     exit(1)
 
-def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers):
+def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers, VERBOSE, first_check):
     urls = get_environment_urls(CLIENT_REALM)
     stackspot_cloud_deployments_details_url = urls["deploy"]
-    application_portal_url = "https://cloud.prd.stackspot.com/applications"
+    application_portal_url = "https://stackspot.com/applications" # Won't work as workspace not informed (TBD)
 
     i = 0
     while True:
         print(f'⚙️ Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
 
-        # Make the request to check the deployment status - CORRECTED URL
-        r3 = requests.get(
-            url=f"{stackspot_cloud_deployments_details_url}/{deployment_id}/status",  # Fixed string formatting
+        response = requests.get(
+            url=f"{stackspot_cloud_deployments_details_url}/{deployment_id}/health",
             headers=deploy_headers
         )
 
-        if r3.status_code == 200:
-            d3 = r3.json()
-            deployment_status = d3.get("status")
+        if response.status_code == 200:
+            data = response.json()
+            if not first_check:
+                if VERBOSE:
+                    print(f"🕵️  CHECK DEPLOYMENT STATUS DATA ({i}):", data)
 
-            if deployment_status == "UP":
-                print(f'✅ Deployment concluded ({deployment_status}) for application "{application_name}" in runtime: "{runtime_name}".')
-                print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
-                break
+                # Extract pod health statuses
+                pods = data.get("status", {}).get("pods", [])
+                health_statuses = [pod.get("healthStatus") for pod in pods]
+
+                if not health_statuses:
+                    print("❌  No pods found in the deployment status response.")
+                    exit(1)
+
+                # Evaluate deployment status based on pod health statuses
+                if any(status == "Healthy" for status in health_statuses):
+                    print(f'✅  Deployment concluded (Healthy) for application "{application_name}" in runtime: "{runtime_name}".')
+                    print(f"📊  Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
+                    break
+                elif all(status in ["Unknown", "Progressing", "Degraded"] for status in health_statuses):
+                    i += 1
+                    print(f"⚙️  Deployment is still in progress. Current pod statuses: {health_statuses}. Retrying in 5 seconds...")
+                elif all(status in ["Suspended", "Missing"] for status in health_statuses):
+                    print(f'❌  Deployment failed for application "{application_name}" in runtime: "{runtime_name}".')
+                    print(f"📊  Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
+                    exit(1)
+                else:
+                    print(f"⚙️  Mixed pod statuses detected: {health_statuses}. Retrying in 5 seconds...")
             else:
-                i = i+1
-                print(f"⚙️ Current deployment status: {deployment_status}. Retrying in 5 seconds...")
+                print("⚙️  First trigger sent...")
+
         else:
-            print("- Error getting deployment details")
-            print("- Status:", r3.status_code)
-            print("- Error:", r3.reason)
-            print("- Response:", r3.text)
+            print("❌  Error getting deployment details")
+            print(f"Status: {response.status_code}, Error: {response.reason}")
             exit(1)
+
+        if first_check:
+            break
 
         time.sleep(5)
 
-def deployment(application_name, runtime_id, deploy_headers, data, CLIENT_REALM):
+def deployment(application_name, runtime_id, deploy_headers, yaml_file_path, CLIENT_REALM, VERBOSE):
     urls = get_environment_urls(CLIENT_REALM)
     deploy_url = urls["deploy"]
-    print(f'⚙️ Deploying "{application_name}" to {CLIENT_REALM}')
+    print(f'⚙️  Deploying "{application_name}" to {CLIENT_REALM} in runtime {runtime_id}')
+    
+    with open(yaml_file_path, 'r') as file:
+        yaml_content = file.read()
+    
+    headers = {
+        "Authorization": deploy_headers["Authorization"],
+        "Content-Type": "application/yaml",
+        "Accept": "application/json"
+    }
+    
     response = requests.post(
         url=deploy_url,
-        headers={
-            "Authorization": deploy_headers["Authorization"],
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        json=data
+        headers=headers,
+        data=yaml_content
     )
+    
     if response.status_code == 200:
-        return response.json().get("id")
-    print("❌ Deployment error")
-    print(f"Status: {response.status_code}, Error: {response.text}")
-    exit(1)
+        print(f"✅  Deploy started successfully (ID: {response.json().get('metadata').get('id')})")
+        if VERBOSE:
+            print("🕵️  DEPLOYMENT RESPONSE DATA:", response.json())
+        return response.json().get("metadata").get("id")  # This is the deploymentId
+    else:
+        print("❌  Deployment error")
+        print(f"Status: {response.status_code}, Error: {response.reason}")
+        if VERBOSE:
+            print("🕵️  ERROR RESPONSE DATA:", response.text)
+        exit(1)
 
 # Environment variables
 CLIENT_ID = os.getenv("CLIENT_ID")
@@ -120,74 +153,44 @@ APPLICATION_FILE = os.getenv("APPLICATION_FILE")
 IMAGE_TAG = os.getenv("IMAGE_TAG")
 
 if not all([CLIENT_ID, CLIENT_KEY, CLIENT_REALM, APPLICATION_FILE]):
-   print("❌ Missing required environment variables!")
-   exit(1)
+    print("❌  Missing required environment variables!")
+    exit(1)
 
+# Load the YAML file to extract metadata for logging purposes
 with open(Path(APPLICATION_FILE), 'r') as file:
-   yaml_data = safe_load(file.read())
-
-print(yaml_data)
+    yaml_data = safe_load(file.read())
 
 # Extract data from YAML
 metadata = yaml_data.get('metadata', {})
 spec = yaml_data.get('spec', {})
 
 application_name = metadata.get('name')
-application_id = metadata.get('id', metadata.get('stackspot', {}).get('applicationId'))
-app_version = metadata.get('appVersion')
-tags = metadata.get('tags', [])
-labels = metadata.get('labels', [])
+app_version = metadata.get('version')
 runtime_id = spec.get('runtimeId')
-deploy_template = spec.get('deployTemplate')
-deploy_template_values = spec.get('deployTemplateValues', {})
+application_id = spec.get('applicationId')
 
 required_fields = {
     "application_name": application_name,
-    "application_id": application_id,
-    "app_version": app_version,
     "runtime_id": runtime_id,
-    "deploy_template": deploy_template,
 }
 
 missing_fields = [field for field, value in required_fields.items() if not value]
 
 if missing_fields:
-    print("❌ Missing required fields in the YAML file:")
+    print("❌  Missing required fields in the YAML file:")
     for field in missing_fields:
         print(f"- {field}")
     exit(1)
 
-if not IMAGE_TAG:
-    print("❌ Image Tag to deploy not informed.")
-    exit(1)
-
-# Update the image tag in deployTemplateValues
-if 'image' in deploy_template_values:
-    deploy_template_values['image']['tag'] = IMAGE_TAG
-
-# Prepare deployment data
-data = {
-    "apiVersion": yaml_data.get('apiVersion'),
-    "kind": yaml_data.get('kind'),
-    "metadata": {
-        "id": application_id,
-        "name": application_name,
-        "appVersion": app_version,
-        "tags": tags,
-        "labels": labels,
-    },
-    "spec": {
-        "deployTemplate": deploy_template,
-        "runtimeId": runtime_id,
-        "deployTemplateValues": deploy_template_values,
-    }
-}
-
-if VERBOSE:
-    print("🕵️ DEPLOYMENT REQUEST DATA:", json.dumps(data, indent=2))
-
-# Execute deployment
+# Authenticate
 access_token = authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY)
 deploy_headers = {"Authorization": f"Bearer {access_token}"}
-deployment_id = deployment(application_name, runtime_id, deploy_headers, data, CLIENT_REALM)
-check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers)
+
+# Start deployment by sending the YAML file directly
+deployment_id = deployment(application_name, runtime_id, deploy_headers, APPLICATION_FILE, CLIENT_REALM, VERBOSE)
+# First check trigger
+check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers, VERBOSE, True)
+# Wait 5s to guarantee async process
+time.sleep(5)
+# Check deployment status
+check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers, VERBOSE, False)
