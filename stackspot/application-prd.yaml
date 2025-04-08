@@ -4,7 +4,7 @@ metadata:
   version: 1.0.0
   name: app-demo-gui-1
 spec:
-  applicationId: 01JQA7AYKT86J6NFB1A6AF747G
+  applicationId: 01JQA7AYKT86J6NFB1A6AF7GUI
   runtimeId: 01JQC2Y5M984NH9T13HZN9M4FZ
   deployTemplate: "default_stackspot_application_chart:0.1.1"
   deployTemplateValues:

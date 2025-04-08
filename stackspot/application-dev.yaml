@@ -2,10 +2,10 @@ apiVersion: platform.cloud.stackspot.com/v1alpha2
 kind: ApplicationDeployment
 metadata:
   version: 1.0.0
-  name: app-demo-gui-3
+  name: app-demo-gui-6
 spec:
-  applicationId: 01JQA7AYKT86J6NFB1A6AF747G
-  runtimeId: 01JQA7AYKT86J6NFB1A6AF747T
+  applicationId: 01JQA7AYKT86J6NFB1A6AF7GUI
+  runtimeId: 01JRBNTDAT318ENRE59SWDBRRV
   deployTemplate: "default_stackspot_application_chart:0.1.1"
   deployTemplateValues:
     image:

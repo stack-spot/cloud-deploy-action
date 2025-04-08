@@ -48,66 +48,11 @@ def authentication(CLIENT_REALM, CLIENT_ID, CLIENT_KEY):
     print(f"⚙️  Authenticating in {CLIENT_REALM}...")
     response = requests.post(url=iam_url, headers=iam_headers, data=iam_data)
     if response.status_code == 200:
-        print("✅  Authentication successful")
+        print("✅ Authentication successful")
         return response.json().get("access_token")
-    print("❌  Authentication error")
+    print("❌ Authentication error")
     print(f"Status: {response.status_code}, Error: {response.text}")
     exit(1)
-
-def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers, VERBOSE, first_check):
-    urls = get_environment_urls(CLIENT_REALM)
-    stackspot_cloud_deployments_details_url = urls["deploy"]
-    application_portal_url = "https://stackspot.com/applications" # Won't work as workspace not informed (TBD)
-
-    i = 0
-    while True:
-        print(f'⚙️  Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
-
-        response = requests.get(
-            url=f"{stackspot_cloud_deployments_details_url}/{deployment_id}/health",
-            headers=deploy_headers
-        )
-
-        if response.status_code == 200:
-            data = response.json()
-            if not first_check:
-                if VERBOSE:
-                    print(f"🕵️  CHECK DEPLOYMENT STATUS DATA ({i}):", data)
-
-                # Extract pod health statuses
-                pods = data.get("status", {}).get("pods", [])
-                health_statuses = [pod.get("healthStatus") for pod in pods]
-
-                if not health_statuses:
-                    print("❌  No pods found in the deployment status response.")
-                    exit(1)
-
-                # Evaluate deployment status based on pod health statuses
-                if any(status == "Healthy" for status in health_statuses):
-                    print(f'✅  Deployment concluded (Healthy) for application "{application_name}" in runtime: "{runtime_name}".')
-                    print(f"📊  Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
-                    break
-                elif all(status in ["Unknown", "Progressing", "Degraded"] for status in health_statuses):
-                    i += 1
-                    print(f"⚙️  Deployment is still in progress. Current pod statuses: {health_statuses}. Retrying in 5 seconds...")
-                elif all(status in ["Suspended", "Missing"] for status in health_statuses):
-                    print(f'❌  Deployment failed for application "{application_name}" in runtime: "{runtime_name}".')
-                    print(f"📊  Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
-                    exit(1)
-                else:
-                    print(f"⚙️  Mixed pod statuses detected: {health_statuses}. Retrying in 5 seconds...")
-            else:
-                print("⚙️  First trigger sent...")
-
-        else:
-            print("❌  Error getting deployment details")
-            print(f"Status: {response.status_code}, Error: {response.reason}")
-            exit(1)
-
-        if first_check:
-            break
-
-        time.sleep(5)
 
 def deployment(application_name, runtime_id, deploy_headers, yaml_file_path, CLIENT_REALM, VERBOSE):
     urls = get_environment_urls(CLIENT_REALM)
@@ -130,16 +75,70 @@ def deployment(application_name, runtime_id, deploy_headers, yaml_file_path, CLI
     )
     
     if response.status_code == 200:
-        print(f"✅  Deploy started successfully (ID: {response.json().get('metadata').get('id')})")
+        print(f"✅ Application Deployment started successfully (ID: {response.json().get('metadata').get('id')})")
         if VERBOSE:
             print("🕵️  DEPLOYMENT RESPONSE DATA:", response.json())
         return response.json().get("metadata").get("id")  # This is the deploymentId
     else:
-        print("❌  Deployment error")
+        print("❌ Application Deployment failed!")
         print(f"Status: {response.status_code}, Error: {response.reason}")
         if VERBOSE:
             print("🕵️  ERROR RESPONSE DATA:", response.text)
         exit(1)
+
+def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers, VERBOSE, first_check):
+    urls = get_environment_urls(CLIENT_REALM)
+    stackspot_cloud_deployments_details_url = urls["deploy"]
+    application_portal_url = "https://stackspot.com/applications" # Won't work as workspace not informed (TBD)
+
+    i = 0
+    while True:
+        print(f'⚙️  Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
+
+        response = requests.get(
+            url=f"{stackspot_cloud_deployments_details_url}/{deployment_id}/health",
+            headers=deploy_headers
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            if VERBOSE:
+                print(f"🕵️  CHECK DEPLOYMENT STATUS DATA ({i}):", data)
+
+            # Extract pod health statuses
+            pods = data.get("status", {}).get("pods", [])
+            health_statuses = [pod.get("healthStatus") for pod in pods]
+
+            if not health_statuses:
+                if i == 5:
+                    print("❌ No pods found in the deployment status response.")
+                    exit(1)
+                else:
+                    print(f"⚙️  Deployment is still in progress. Retrying in 5 seconds...")
+
+            # Evaluate deployment status based on pod health statuses
+            if any(status == "Healthy" for status in health_statuses):
+                print(f'✅ Deployment concluded (Healthy) for application "{application_name}" in runtime: "{runtime_name}".')
+                print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
+                break
+            elif all(status in ["Unknown", "Progressing", "Degraded"] for status in health_statuses):
+                i += 1
+                print(f"⚙️  Deployment is still in progress. Current pod statuses: {health_statuses}. Retrying in 5 seconds...")
+            elif all(status in ["Suspended", "Missing"] for status in health_statuses):
+                print(f'❌ Deployment failed for application "{application_name}" in runtime: "{runtime_name}".')
+                print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
+                exit(1)
+            else:
+                print(f"⚙️  Mixed pod statuses detected: {health_statuses}. Retrying in 5 seconds...")
+        else:
+            print("❌ Error getting deployment details")
+            print(f"Status: {response.status_code}, Error: {response.reason}")
+            exit(1)
+
+        if first_check:
+            break
+
+        time.sleep(5)
 
 # Environment variables
 CLIENT_ID = os.getenv("CLIENT_ID")
@@ -185,8 +184,6 @@ deploy_headers = {"Authorization": f"Bearer {access_token}"}
 
 # Start deployment by sending the YAML file directly
 deployment_id = deployment(application_name, runtime_id, deploy_headers, APPLICATION_FILE, CLIENT_REALM, VERBOSE)
-# First check trigger
-check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers, VERBOSE, True)
 # Wait 5s to guarantee async process
 time.sleep(5)
 # Check deployment status
