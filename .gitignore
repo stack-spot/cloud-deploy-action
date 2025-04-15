@@ -1,5 +1,8 @@
 # Created by https://www.gitignore.io
 
+### Python ###
+venv
+
 ### Go ###
 # Binaries for programs and plugins
 *.dll

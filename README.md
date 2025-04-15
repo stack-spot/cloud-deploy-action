@@ -10,6 +10,8 @@ _**Note**: This action is supported on all runners operating systems (`ubuntu`, 
 
 To get the account keys (`CLIENT_ID`, `CLIENT_KEY` and `CLIENT_REALM`), please login using a **ADMIN** user on the [StackSpot Portal](https://stackspot.com), and generate new keys at [https://stackspot.com/en/settings/access-token](https://stackspot.com/en/settings/access-token).
 
+_Note: You can generate an [`application.yaml` file](https://github.com/stack-spot/cloud-deploy-action/blob/main/stackspot/application-new.yaml), directly on the StackSpot Portal._
+
 ### Use Case
 
 ```yaml
@@ -51,23 +53,7 @@ Field | Mandatory | Default Value | Observation
 
 ## Development
 
-### STG environment
-
-```yaml
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.2.1
-      - name: Deploy repo application
-        uses: stack-spot/cloud-deploy-action@stg
-        id: deploy
-        with:
-          CLIENT_REALM: ${{ secrets.CLIENT_REALM_STG }}
-          CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
-          CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
-          APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-stg.yaml
-          IMAGE_TAG: latest
-          VERBOSE: true
-```
+To test this action on this repository during internal development, please use the setup below:
 
 ### DEV environment
 
@@ -76,13 +62,31 @@ Field | Mandatory | Default Value | Observation
       - name: Checkout repository
         uses: actions/checkout@v4.2.1
       - name: Deploy repo application
-        uses: stack-spot/cloud-deploy-action@dev
+        uses: stack-spot/cloud-deploy-action@main
         id: deploy
         with:
-          CLIENT_REALM: ${{ secrets.CLIENT_REALM_DEV }}
+          CLIENT_REALM: stackspot-dev
           CLIENT_ID: ${{ secrets.CLIENT_ID_DEV }}
           CLIENT_KEY: ${{ secrets.CLIENT_KEY_DEV }}
           APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-dev.yaml
+          IMAGE_TAG: latest
+          VERBOSE: true
+```
+
+### STG environment
+
+```yaml
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.1
+      - name: Deploy repo application
+        uses: stack-spot/cloud-deploy-action@main
+        id: deploy
+        with:
+          CLIENT_REALM: stackspot-stg
+          CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
+          CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
+          APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-stg.yaml
           IMAGE_TAG: latest
           VERBOSE: true
 ```
