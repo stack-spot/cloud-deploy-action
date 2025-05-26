@@ -2,10 +2,15 @@ name: Deploy DEV
 
 on:
     workflow_dispatch:
+    push:
+        branches: [v3]
   
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
+
+env:
+    IMAGE_REPOSITORY: 185072717495.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo
 
 jobs:
     build:
@@ -31,5 +36,7 @@ jobs:
                 CLIENT_ID: ${{ secrets.CLIENT_ID_DEV }}
                 CLIENT_KEY: ${{ secrets.CLIENT_KEY_DEV }}
                 APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-dev.yaml
-                IMAGE_TAG: ${{needs.build.outputs.tag}}
+                PARAMETERS: |
+                   IMAGE_REPOSITORY >> ${{ env.IMAGE_REPOSITORY }}
+                   IMAGE_TAG >> ${{ needs.build.outputs.tag }}
                 VERBOSE: true

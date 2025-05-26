@@ -139,7 +139,6 @@ CLIENT_KEY = os.getenv("CLIENT_KEY")
 CLIENT_REALM = os.getenv("CLIENT_REALM")
 VERBOSE = os.getenv("VERBOSE")
 APPLICATION_FILE = os.getenv("APPLICATION_FILE")
-IMAGE_TAG = os.getenv("IMAGE_TAG")
 
 if not all([CLIENT_ID, CLIENT_KEY, CLIENT_REALM, APPLICATION_FILE]):
     print("❌  Missing required environment variables!")
