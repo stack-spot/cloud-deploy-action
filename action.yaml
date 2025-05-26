@@ -46,7 +46,9 @@ runs:
         parameters: |
           ${{ inputs.parameters }}
 
-    - run: cat ${{ inputs.APPLICATION_FILE }}
+    - name: Check application file
+      run: cat ${{ inputs.APPLICATION_FILE }}
+      shell: bash
 
     - name: Start StackSpot Cloud Deploy
       id: deployment
