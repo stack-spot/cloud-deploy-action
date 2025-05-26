@@ -2,10 +2,15 @@ name: Deploy PRD
 
 on:
     workflow_dispatch:
+    push:
+        branches: [v3]
   
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
+
+env:
+    IMAGE_REPOSITORY: 742799255367.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo
 
 jobs:
     build:
@@ -24,12 +29,15 @@ jobs:
             - name: Checkout repo
               uses: actions/checkout@v4.2.1
             - name: Deploy repo application
-              uses: stack-spot/cloud-deploy-action@main
+              uses: stack-spot/cloud-deploy-action@v3
               id: deploy
               with:
-                CLIENT_REALM: ${{ secrets.CLIENT_REALM_PRD }}
-                CLIENT_ID: ${{ secrets.CLIENT_ID_PRD }}
-                CLIENT_KEY: ${{ secrets.CLIENT_KEY_PRD }}
+                CLIENT_REALM: ${{ secrets.CLIENT_REALM_DEV }}
+                CLIENT_ID: ${{ secrets.CLIENT_ID_DEV }}
+                CLIENT_KEY: ${{ secrets.CLIENT_KEY_DEV }}
                 APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-prd.yaml
-                IMAGE_TAG: ${{needs.build.outputs.tag}}
+                PARAMETERS: |
+                   IMAGE_REPOSITORY >> ${{ env.IMAGE_REPOSITORY }}
+                   IMAGE_TAG >> ${{ needs.build.outputs.tag }}
+                   IMAGE_TAG >> ${{ needs.build.outputs.tag }}
                 VERBOSE: true
