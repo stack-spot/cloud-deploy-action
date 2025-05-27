@@ -33,8 +33,9 @@ jobs:
                 CLIENT_REALM: ${{ secrets.CLIENT_REALM_DEV }}
                 CLIENT_ID: ${{ secrets.CLIENT_ID_DEV }}
                 CLIENT_KEY: ${{ secrets.CLIENT_KEY_DEV }}
-                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-stg.yaml
+                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application.yaml
                 PARAMETERS: |
                    IMAGE_REPOSITORY >> ${{ env.IMAGE_REPOSITORY }}
                    IMAGE_TAG >> ${{ needs.build.outputs.tag }}
+                   RUNTIME_ID >> 01JQBTZDC22C0QYC2N294SA4K9
                 VERBOSE: true

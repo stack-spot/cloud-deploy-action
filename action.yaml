@@ -39,14 +39,15 @@ runs:
       shell: bash
 
     - name: Replace multiple values in a specific file
-      if: ${{ inputs.parameters != '' }}
+      if: ${{ inputs.PARAMETERS != '' }}
       uses: GuillaumeFalourd/replace-values-action@v1.1
       with:
         file_path: ${{ inputs.APPLICATION_FILE }}
         parameters: |
-          ${{ inputs.parameters }}
+          ${{ inputs.PARAMETERS }}
 
     - name: Check application file
+      if: ${{ inputs.VERBOSE != '' }}
       run: cat ${{ inputs.APPLICATION_FILE }}
       shell: bash
 

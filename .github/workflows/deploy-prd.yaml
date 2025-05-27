@@ -2,8 +2,6 @@ name: Deploy PRD
 
 on:
     workflow_dispatch:
-    push:
-        branches: [v3]
   
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -35,8 +33,9 @@ jobs:
                 CLIENT_REALM: ${{ secrets.CLIENT_REALM_DEV }}
                 CLIENT_ID: ${{ secrets.CLIENT_ID_DEV }}
                 CLIENT_KEY: ${{ secrets.CLIENT_KEY_DEV }}
-                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-prd.yaml
+                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application.yaml
                 PARAMETERS: |
                    IMAGE_REPOSITORY >> ${{ env.IMAGE_REPOSITORY }}
                    IMAGE_TAG >> ${{ needs.build.outputs.tag }}
+                   RUNTIME_ID >> 01JQC2Y5M984NH9T13HZN9M4FZ
                 VERBOSE: true

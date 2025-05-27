@@ -1,6 +1,6 @@
 # cloud-deploy-action
 
-GitHub action to authenticate and consume StackSpot Cloud API.
+GitHub action to authenticate and consume StackSpot Run Cloud Platform API.
 
 _**Note**: This action is supported on all runners operating systems (`ubuntu`, `macos`, `windows`)_
 
@@ -55,7 +55,7 @@ Field | Mandatory | Default Value | Observation
 
 ## Development
 
-To test this action on this repository during internal development, please use the setup below:
+To test this action on this repository during internal development, please use the setup below, using organization runners in private repositories:
 
 ### DEV environment
 
@@ -70,9 +70,10 @@ To test this action on this repository during internal development, please use t
           CLIENT_REALM: stackspot-dev
           CLIENT_ID: ${{ secrets.CLIENT_ID_DEV }}
           CLIENT_KEY: ${{ secrets.CLIENT_KEY_DEV }}
-          APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-dev.yaml
-          IMAGE_TAG: latest
+          APPLICATION_FILE: ${{ github.workspace }}/stackspot/application.yaml
           VERBOSE: true
+          PARAMETERS: |
+            ...
 ```
 
 ### STG environment
@@ -88,7 +89,8 @@ To test this action on this repository during internal development, please use t
           CLIENT_REALM: stackspot-stg
           CLIENT_ID: ${{ secrets.CLIENT_ID_STG }}
           CLIENT_KEY: ${{ secrets.CLIENT_KEY_STG }}
-          APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-stg.yaml
-          IMAGE_TAG: latest
+          APPLICATION_FILE: ${{ github.workspace }}/stackspot/application.yaml
           VERBOSE: true
+          PARAMETERS: |
+            ...
 ```
