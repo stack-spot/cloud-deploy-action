@@ -7,6 +7,9 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
+env:
+    IMAGE_REPOSITORY: 742799255367.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo
+
 jobs:
     build:
         runs-on: ubuntu-latest
@@ -19,7 +22,7 @@ jobs:
     
     deploy:
         needs: [build]
-        runs-on: lite-runners-prd
+        runs-on: ubuntu-latest
         steps:
             - name: Checkout repo
               uses: actions/checkout@v4.2.1
@@ -27,9 +30,12 @@ jobs:
               uses: stack-spot/cloud-deploy-action@main
               id: deploy
               with:
-                CLIENT_REALM: ${{ secrets.CLIENT_REALM_PRD }}
-                CLIENT_ID: ${{ secrets.CLIENT_ID_PRD }}
-                CLIENT_KEY: ${{ secrets.CLIENT_KEY_PRD }}
-                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application-prd.yaml
-                IMAGE_TAG: ${{needs.build.outputs.tag}}
+                CLIENT_REALM: ${{ secrets.CLIENT_REALM_DEV }}
+                CLIENT_ID: ${{ secrets.CLIENT_ID_DEV }}
+                CLIENT_KEY: ${{ secrets.CLIENT_KEY_DEV }}
+                APPLICATION_FILE: ${{ github.workspace }}/stackspot/application.yaml
+                PARAMETERS: |
+                   IMAGE_REPOSITORY >> ${{ env.IMAGE_REPOSITORY }}
+                   IMAGE_TAG >> ${{ needs.build.outputs.tag }}
+                   RUNTIME_ID >> 01JQC2Y5M984NH9T13HZN9M4FZ
                 VERBOSE: true

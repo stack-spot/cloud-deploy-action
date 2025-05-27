@@ -2,20 +2,20 @@ apiVersion: platform.cloud.stackspot.com/v1alpha2
 kind: ApplicationDeployment
 metadata:
   version: 1.0.0
-  name: app-demo-gui-7
+  name: app-demo-action
 spec:
-  applicationId: 01JQA7AYKT86J6NFB1A6AF7GUI
-  runtimeId: 01JRBNTDAT318ENRE59SWDBRRV
+  applicationId: 01JQA7AYKT86J6NFB1A6AF7GUO
+  runtimeId: RUNTIME_ID
   deployTemplate: "default_stackspot_application_chart:0.1.1"
   deployTemplateValues:
     image:
-      repository: "185072717495.dkr.ecr.sa-east-1.amazonaws.com/cloud-apps-demo"
-      tag: latest
+      repository: IMAGE_REPOSITORY
+      tag: IMAGE_TAG
     autoscaling:
       enabled: true
-      minReplicas: 1
-      maxReplicas: 2
-      targetCPUUtilizationPercentage: 80  
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80   
     service:
       port: 80
       type: ClusterIP
