@@ -27,7 +27,7 @@ jobs:
             - name: Checkout repo
               uses: actions/checkout@v4.2.1
             - name: Deploy repo application
-              uses: stack-spot/cloud-deploy-action@v3
+              uses: stack-spot/cloud-deploy-action@main
               id: deploy
               with:
                 CLIENT_REALM: ${{ secrets.CLIENT_REALM_DEV }}
