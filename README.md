@@ -31,7 +31,6 @@ _Note: You can generate an [`application.yaml` file](https://github.com/stack-sp
             PLACEHOLDER_2 >> VALUE_2
           VERBOSE: true
           BACKOFF_INITIAL: 10
-          BACKOFF_MAX: 120
           BACKOFF_FACTOR: 2
           BACKOFF_MAX_RETRIES: 15
 ```
@@ -49,7 +48,6 @@ Field | Mandatory | Default Value | Observation
 **PARAMETERS** | NO | N/A | Placeholder values to replace in APPLICATION_FILE
 **VERBOSE** | NO | `false` | Whether to show extra logs during execution. (e.g: `true`).
 **BACKOFF_INITIAL** | NO | `5` | Initial wait time (in seconds) before retrying deployment status check.
-**BACKOFF_MAX** | NO | `60` | Maximum wait time (in seconds) between retries.
 **BACKOFF_FACTOR** | NO | `2` | Multiplicative factor for exponential backoff.
 **BACKOFF_MAX_RETRIES** | NO | `10` | Maximum number of retries for deployment status check.
 
