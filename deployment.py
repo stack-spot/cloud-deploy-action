@@ -86,19 +86,13 @@ def deployment(application_name, runtime_id, deploy_headers, yaml_file_path, CLI
             print("🕵️  ERROR RESPONSE DATA:", response.text)
         exit(1)
 
-def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers, VERBOSE, first_check, backoff_initial, backoff_max, backoff_factor, backoff_max_retries):
+def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers, VERBOSE, first_check, backoff_initial, backoff_factor, backoff_max_retries):
     urls = get_environment_urls(CLIENT_REALM)
     stackspot_cloud_deployments_details_url = urls["deploy"]
     application_portal_url = "https://stackspot.com/applications"
 
-    # Configuração do backoff via env
-    initial = int(os.getenv("BACKOFF_INITIAL", 5))
-    max_backoff = int(os.getenv("BACKOFF_MAX", 60))
-    factor = float(os.getenv("BACKOFF_FACTOR", 2))
-    max_retries = int(os.getenv("BACKOFF_MAX_RETRIES", 10))
-
     i = 0
-    backoff = initial
+    backoff = backoff_initial
     while True:
         print(f'⚙️  Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
 
@@ -136,12 +130,12 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
         if first_check:
             break
 
-        if i >= max_retries:
-            print(f"❌ Max retries ({max_retries}) reached. Exiting.")
+        if i >= backoff_max_retries:
+            print(f"❌ Max retries ({backoff_max_retries}) reached. Exiting.")
             exit(1)
 
         time.sleep(backoff)
-        backoff = min(max_backoff, int(backoff * factor))
+        backoff = min(backoff_max_retries, int(backoff * backoff_factor))
         i += 1
 
 # Environment variables
@@ -152,10 +146,9 @@ VERBOSE = os.getenv("VERBOSE")
 APPLICATION_FILE = os.getenv("APPLICATION_FILE")
 
 # Backoff configuration
-BACKOFF_INITIAL = int(os.getenv("BACKOFF_INITIAL", 5))
-BACKOFF_MAX = int(os.getenv("BACKOFF_MAX", 60))
-BACKOFF_FACTOR = float(os.getenv("BACKOFF_FACTOR", 2))
-BACKOFF_MAX_RETRIES = int(os.getenv("BACKOFF_MAX_RETRIES", 10))
+BACKOFF_INITIAL = int(os.getenv("BACKOFF_INITIAL"))
+BACKOFF_FACTOR = float(os.getenv("BACKOFF_FACTOR"))
+BACKOFF_MAX_RETRIES = int(os.getenv("BACKOFF_MAX_RETRIES"))
 
 if not all([CLIENT_ID, CLIENT_KEY, CLIENT_REALM, APPLICATION_FILE]):
     print("❌  Missing required environment variables!")
@@ -198,5 +191,5 @@ time.sleep(5)
 # Check deployment status
 check_deployment_status(
     application_name, runtime_id, deployment_id, application_id, deploy_headers, VERBOSE, False,
-    BACKOFF_INITIAL, BACKOFF_MAX, BACKOFF_FACTOR, BACKOFF_MAX_RETRIES
+    BACKOFF_INITIAL, BACKOFF_FACTOR, BACKOFF_MAX_RETRIES
 )

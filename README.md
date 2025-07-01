@@ -82,10 +82,6 @@ To test this action on this repository during internal development, please use t
           VERBOSE: true
           PARAMETERS: |
             ...
-          BACKOFF_INITIAL: 5
-          BACKOFF_MAX: 60
-          BACKOFF_FACTOR: 2
-          BACKOFF_MAX_RETRIES: 10
 ```
 
 ### STG environment
@@ -105,8 +101,4 @@ To test this action on this repository during internal development, please use t
           VERBOSE: true
           PARAMETERS: |
             ...
-          BACKOFF_INITIAL: 5
-          BACKOFF_MAX: 60
-          BACKOFF_FACTOR: 2
-          BACKOFF_MAX_RETRIES: 10
 ```
