@@ -86,12 +86,13 @@ def deployment(application_name, runtime_id, deploy_headers, yaml_file_path, CLI
             print("🕵️  ERROR RESPONSE DATA:", response.text)
         exit(1)
 
-def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers, VERBOSE, first_check):
+def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers, VERBOSE, first_check, backoff_initial, backoff_factor, backoff_max_retries):
     urls = get_environment_urls(CLIENT_REALM)
     stackspot_cloud_deployments_details_url = urls["deploy"]
-    application_portal_url = "https://stackspot.com/applications" # Won't work as workspace not informed (TBD)
+    application_portal_url = "https://stackspot.com/applications"
 
     i = 0
+    backoff = backoff_initial
     while True:
         print(f'⚙️  Checking application "{application_name}" deployment status in runtime: "{runtime_name}" ({i}).')
 
@@ -105,24 +106,22 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
             if VERBOSE:
                 print(f"🕵️  CHECK DEPLOYMENT STATUS DATA ({i}):", data)
 
-            # Extract pod health statuses
             pods = data.get("status", {}).get("pods", [])
             health_statuses = [pod.get("healthStatus") for pod in pods]
 
-            # Evaluate deployment status based on pod health statuses
             if any(status == "Healthy" for status in health_statuses):
                 print(f'✅ Deployment concluded (Healthy) for application "{application_name}" in runtime: "{runtime_name}".')
                 print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
                 break
             elif all(status in ["Unknown", "Progressing", "Degraded"] for status in health_statuses):
                 i += 1
-                print(f"⚙️  Deployment is still in progress. Current pod statuses: {health_statuses}. Retrying in 5 seconds...")
+                print(f"⚙️  Deployment is still in progress. Current pod statuses: {health_statuses}. Retrying in {backoff} seconds...")
             elif all(status in ["Suspended", "Missing"] for status in health_statuses):
                 print(f'❌ Deployment failed for application "{application_name}" in runtime: "{runtime_name}".')
                 print(f"📊 Check the application status on {application_portal_url}/{application_id}/?tabIndex=0")
                 exit(1)
             else:
-                print(f"⚙️  Mixed pod statuses detected: {health_statuses}. Retrying in 5 seconds...")
+                print(f"⚙️  Mixed pod statuses detected: {health_statuses}. Retrying in {backoff} seconds...")
         else:
             print("❌ Error getting deployment details")
             print(f"Status: {response.status_code}, Error: {response.reason}")
@@ -131,7 +130,13 @@ def check_deployment_status(application_name, runtime_name, deployment_id, appli
         if first_check:
             break
 
-        time.sleep(5)
+        if i >= backoff_max_retries:
+            print(f"❌ Max retries ({backoff_max_retries}) reached. Exiting.")
+            exit(1)
+
+        time.sleep(backoff)
+        backoff = min(backoff_max_retries, int(backoff * backoff_factor))
+        i += 1
 
 # Environment variables
 CLIENT_ID = os.getenv("CLIENT_ID")
@@ -139,6 +144,11 @@ CLIENT_KEY = os.getenv("CLIENT_KEY")
 CLIENT_REALM = os.getenv("CLIENT_REALM")
 VERBOSE = os.getenv("VERBOSE")
 APPLICATION_FILE = os.getenv("APPLICATION_FILE")
+
+# Backoff configuration
+BACKOFF_INITIAL = int(os.getenv("BACKOFF_INITIAL"))
+BACKOFF_FACTOR = float(os.getenv("BACKOFF_FACTOR"))
+BACKOFF_MAX_RETRIES = int(os.getenv("BACKOFF_MAX_RETRIES"))
 
 if not all([CLIENT_ID, CLIENT_KEY, CLIENT_REALM, APPLICATION_FILE]):
     print("❌  Missing required environment variables!")
@@ -179,4 +189,7 @@ deployment_id = deployment(application_name, runtime_id, deploy_headers, APPLICA
 # Wait 5s to guarantee async process
 time.sleep(5)
 # Check deployment status
-check_deployment_status(application_name, runtime_id, deployment_id, application_id, deploy_headers, VERBOSE, False)
+check_deployment_status(
+    application_name, runtime_id, deployment_id, application_id, deploy_headers, VERBOSE, False,
+    BACKOFF_INITIAL, BACKOFF_FACTOR, BACKOFF_MAX_RETRIES
+)
