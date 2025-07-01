@@ -86,8 +86,7 @@ def deployment(application_name, runtime_id, deploy_headers, yaml_file_path, CLI
             print("🕵️  ERROR RESPONSE DATA:", response.text)
         exit(1)
 
-def def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers, VERBOSE, first_check,
-                           backoff_initial, backoff_max, backoff_factor, backoff_max_retries):
+def check_deployment_status(application_name, runtime_name, deployment_id, application_id, deploy_headers, VERBOSE, first_check, backoff_initial, backoff_max, backoff_factor, backoff_max_retries):
     urls = get_environment_urls(CLIENT_REALM)
     stackspot_cloud_deployments_details_url = urls["deploy"]
     application_portal_url = "https://stackspot.com/applications"
