@@ -4,23 +4,36 @@ description: 'Cloud Deploy Action'
 
 inputs:
   CLIENT_ID:
-    description: Account client id
+    description: 'StackSpot Client Id.'
     required: true
   CLIENT_KEY:
-    description: Account client secret key
+    description: 'StackSpot Client Secret Key.'
     required: true
   CLIENT_REALM:
-    description: Account client realm
+    description: 'StackSpot Client Realm.'
     required: true
   VERBOSE:
-    description: Verbose configuration
+    description: 'Verbose configuration.'
     required: false
   APPLICATION_FILE:
-    description: Application file path to use
+    description: 'Application file path to use.'
     required: true
   PARAMETERS:
     description: 'The current parameters to replace wit values. Accepts an array.'
     required: false
+  BACKOFF_INITIAL:
+    description: 'Initial wait time (in seconds) before retrying deployment status check.'
+    required: false
+    default: '5'
+  BACKOFF_FACTOR:
+    description: 'Multiplicative factor for exponential backoff.'
+    required: false
+    default: '2'
+  BACKOFF_MAX_RETRIES:
+    description: 'Maximum number of retries for deployment status check.'
+    required: false
+    default: '30'
+    
 
 runs:
   using: "composite"
@@ -59,6 +72,9 @@ runs:
         CLIENT_REALM: ${{ inputs.CLIENT_REALM }}
         VERBOSE: ${{ inputs.VERBOSE }}
         APPLICATION_FILE: ${{ inputs.APPLICATION_FILE }}
+        BACKOFF_INITIAL: ${{ inputs.BACKOFF_INITIAL }}
+        BACKOFF_FACTOR: ${{ inputs.BACKOFF_FACTOR }}
+        BACKOFF_MAX_RETRIES: ${{ inputs.BACKOFF_MAX_RETRIES }}
       run: |
         if [ ${{runner.os}} != 'Windows' ]; then
           python3 ${{ github.action_path }}/deployment.py
