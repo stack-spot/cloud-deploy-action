@@ -30,6 +30,10 @@ _Note: You can generate an [`application.yaml` file](https://github.com/stack-sp
             PLACEHOLDER_1 >> VALUE_1
             PLACEHOLDER_2 >> VALUE_2
           VERBOSE: true
+          BACKOFF_INITIAL: 10
+          BACKOFF_MAX: 120
+          BACKOFF_FACTOR: 2
+          BACKOFF_MAX_RETRIES: 15
 ```
 
 * * *
@@ -44,6 +48,10 @@ Field | Mandatory | Default Value | Observation
 **APPLICATION_FILE** | YES | N/A | StackSpot application config file (generally in `stackspot` folder)
 **PARAMETERS** | NO | N/A | Placeholder values to replace in APPLICATION_FILE
 **VERBOSE** | NO | `false` | Whether to show extra logs during execution. (e.g: `true`).
+**BACKOFF_INITIAL** | NO | `5` | Initial wait time (in seconds) before retrying deployment status check.
+**BACKOFF_MAX** | NO | `60` | Maximum wait time (in seconds) between retries.
+**BACKOFF_FACTOR** | NO | `2` | Multiplicative factor for exponential backoff.
+**BACKOFF_MAX_RETRIES** | NO | `10` | Maximum number of retries for deployment status check.
 
 * * *
 
@@ -74,6 +82,10 @@ To test this action on this repository during internal development, please use t
           VERBOSE: true
           PARAMETERS: |
             ...
+          BACKOFF_INITIAL: 5
+          BACKOFF_MAX: 60
+          BACKOFF_FACTOR: 2
+          BACKOFF_MAX_RETRIES: 10
 ```
 
 ### STG environment
@@ -93,4 +105,8 @@ To test this action on this repository during internal development, please use t
           VERBOSE: true
           PARAMETERS: |
             ...
+          BACKOFF_INITIAL: 5
+          BACKOFF_MAX: 60
+          BACKOFF_FACTOR: 2
+          BACKOFF_MAX_RETRIES: 10
 ```
