@@ -169,7 +169,6 @@ application_id = spec.get('applicationId')
 
 required_fields = {
     "application_name": application_name,
-    "runtime_id": runtime_id,
 }
 
 missing_fields = [field for field, value in required_fields.items() if not value]
